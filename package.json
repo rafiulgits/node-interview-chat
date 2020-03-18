@@ -1,0 +1,19 @@
+{
+  "name": "chat-app",
+  "version": "0.1.0",
+  "description": "a simple chat application based on expressjs and socketio",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "chat",
+    "application"
+  ],
+  "author": "rafiul islam",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.17.1",
+    "socket.io": "^2.3.0"
+  }
+}
