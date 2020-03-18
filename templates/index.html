@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.3.1/css/bootstrap.min.css"
+    />
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.15.0/esm/popper-utils.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.3.1/js/bootstrap.min.js"></script>
+    <title>Document</title>
+  </head>
+  <body>
+    <div class="container-fluid">
+      <div class="row d-flex justify-content-center">
+        <div class="col-md-6 mt-5 bg-primary p-5 text-white">
+          <h1 class="text-center display-4">Universal Chat Room</h1>
+          <form class="d-flex justify-content-center pt-5 pb-5 form-inline">
+            <input
+              id="input_user_id"
+              type="text"
+              class="form-control mr-2"
+              placeholder="Enter your ID"
+            />
+            <button id="submit_user_id" class="btn btn-light" type="submit">
+              Enter
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </body>
+
+  <script>
+    $("#submit_user_id").on("click", event => {
+      event.preventDefault();
+      console.log($("#input_user_id").val());
+    });
+  </script>
+</html>
