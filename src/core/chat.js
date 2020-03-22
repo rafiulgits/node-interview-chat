@@ -33,6 +33,7 @@ class Chat {
     this.user = user;
     if (user === null) {
       this.dismiss();
+      return;
     }
     user.id = this.socket.client.id;
     Users.update(user);
@@ -72,7 +73,7 @@ class Chat {
 
   dismiss() {
     try {
-      this.socket.terminate();
+      this.socket.disconnect();
     } catch {
       this.socket = null;
     }
