@@ -9,41 +9,21 @@
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.3.1/css/bootstrap.min.css"
     />
-    <style>
-      form {
-        position: fixed;
-        bottom: 0;
-        width: inherit;
-        padding: 3px;
-      }
-    </style>
+    <link rel="stylesheet" href="/static/room.css" />
   </head>
   <body>
-    <div class="container-fluid">
-      <div class="row">
-        <div class="col-sm-3">
-          <ul class="list-group" id="active-user-list"></ul>
-        </div>
-        <div class="col-sm-9" style="position: relative;">
-          <ul
-            class="list-group"
-            id="message-list"
-            style="height: 80vh; overflow-y: scroll;"
-          ></ul>
+    <div class="left-block">
+      <h6 class="text-center">Active Users</h6>
+      <ul id="active-user-list"></ul>
+    </div>
+    <div class="right-block">
+      <ul id="message-list"></ul>
 
-          <form action="" class="form-inline">
-            <input
-              class="form-control"
-              style="width: 60%;"
-              autocomplete="off"
-              type="text"
-              id="m"
-            />
-            <button style="width: 6%;" class="btn btn-primary ml-2">
-              Send
-            </button>
-          </form>
-        </div>
+      <div id="form-container">
+        <form action="">
+          <input id="input-message" type="text" placeholder="Your message" />
+          <button>Send</button>
+        </form>
       </div>
     </div>
 
@@ -66,21 +46,35 @@
 
       socket.emit("chat entry", user);
 
+      const displayNewMessage = msg => {
+        $("#message-list").append(
+          $("<li>").append(
+            $("<p>").append($("<span>").text(msg.username), msg.body)
+          )
+        );
+      };
+
+      const displayActiveUser = user => {
+        $("#active-user-list").append(
+          $("<li>").append(user.name, $("<br>"), $("<span>").text(user.type))
+        );
+      };
+
+      const scrollToTop = element => {
+        $(element).animate({ scrollTop: $(element)[0].scrollHeight }, 1000);
+      };
+
       // display all previous messages
       socket.on("previous messages", arr => {
         arr.forEach(msg => {
-          let newItem = $("<li>")
-            .text(`${msg.username} : ${msg.body}`)
-            .addClass("list-group-item");
-          $("#message-list").append(newItem);
+          displayNewMessage(msg);
         });
+        scrollToTop("#message-list");
       });
 
       socket.on("message", msg => {
-        let newItem = $("<li>")
-          .text(`${msg.username} : ${msg.body}`)
-          .addClass("list-group-item");
-        $("#message-list").append(newItem);
+        displayNewMessage(msg);
+        scrollToTop("#message-list");
       });
 
       socket.on("disconnect", () => {
@@ -91,10 +85,7 @@
       socket.on("active users", users => {
         $("#active-user-list").empty();
         users.forEach(user => {
-          let item = $("<li>")
-            .addClass("list-group-item")
-            .text(user.name);
-          $("#active-user-list").append(item);
+          displayActiveUser(user);
         });
       });
 
@@ -102,11 +93,11 @@
         e.preventDefault();
         let message = {
           username: user.name,
-          body: $("#m").val(),
+          body: $("#input-message").val(),
           time: new Date().toLocaleString()
         };
         socket.emit("message", message);
-        $("#m").val("");
+        $("#input-message").val("");
         return false;
       });
     </script>

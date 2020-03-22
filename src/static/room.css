@@ -1,0 +1,104 @@
+body,
+html {
+  min-width: 600px;
+  position: relative;
+  display: flex;
+  border: 0px;
+  margin: 0px;
+  padding: 0px;
+  width: 100%;
+  max-width: 100vw;
+}
+
+.left-block {
+  width: 20%;
+  margin: 0px;
+  padding-top: 10px;
+  height: 100vh;
+  overflow-y: scroll;
+  background-color: rgba(21, 221, 38, 0.247);
+}
+
+.right-block {
+  width: 79%;
+  height: 100vh;
+  position: relative;
+  padding: 5px;
+  margin: 0px;
+}
+#active-user-list {
+  list-style: none;
+  padding: 0px;
+  margin: 0px 2px 2px 2px;
+}
+
+#active-user-list li {
+  font-size: 14px;
+  text-align: left;
+  color: green;
+  margin: 0px 2px 2px 0px;
+  padding-left: 5px;
+  background-color: rgba(21, 91, 221, 0.247);
+  border-radius: 5px;
+}
+
+#active-user-list li span {
+  font-size: 12px;
+  color: black;
+  font-weight: bold;
+}
+
+#form-container {
+  position: absolute;
+  bottom: 0px;
+  width: 100%;
+  margin: 0px;
+  padding: 0px;
+}
+form {
+  margin: 0px;
+  width: 100%;
+}
+form input {
+  width: 80%;
+  padding: 5px 10px;
+  box-sizing: border-box;
+  border: 2px solid #ccc;
+  border-radius: 4px;
+}
+form button {
+  width: 18%;
+  border: 1px;
+  background-color: #4caf50;
+  border: none;
+  color: white;
+  padding: 5px 32px;
+  text-decoration: none;
+  margin: 4px 2px;
+  cursor: pointer;
+}
+#message-list {
+  height: 90vh;
+  overflow-y: scroll;
+  list-style: none;
+  padding: 0px;
+}
+
+#message-list li {
+  padding: 0px;
+  margin: 2px 2px 2px 0px;
+  font-size: 14px;
+}
+
+#message-list li p {
+  background-color: lightgray;
+  margin: 0px;
+  padding: 2px 4px;
+  display: inline-block;
+  border-radius: 5px;
+}
+
+#message-list li span {
+  font-weight: bold;
+  padding: 2px 5px 2px 2px;
+}

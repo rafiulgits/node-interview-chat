@@ -16,6 +16,10 @@ const getTemplate = name => {
   return path.join(__dirname, `src/templates/${name}.html`);
 };
 
+const getStaticFile = file => {
+  return path.join(__dirname, `src/static/${file}`);
+};
+
 app.get("/", (req, res) => {
   res.sendFile(getTemplate("index"));
 });
@@ -26,6 +30,11 @@ app.get("/login", (req, res) => {
 
 app.get("/room", (req, res) => {
   res.sendFile(getTemplate("room"));
+});
+
+app.get("/static/:file", (req, res) => {
+  let file = req.params.file;
+  res.sendFile(getStaticFile(file));
 });
 
 const handleLoginRequest = (socket, msg) => {
