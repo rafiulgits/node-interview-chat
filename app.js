@@ -1,11 +1,67 @@
-import Express from "express";
+import express from "express";
+import socketio from "socket.io";
 import path from "path";
 import http from "http";
+import { Users } from "./src/core/db";
+import Chat from "./src/core/chat";
 
-const app = Express();
+export var app = express();
+export var server = http.createServer(app);
+export var io = new socketio(server);
+export const Room = "room";
+
+const Connection = "connection";
+
+const getTemplate = name => {
+  return path.join(__dirname, `src/templates/${name}.html`);
+};
 
 app.get("/", (req, res) => {
-  return res.sendFile(path.join(__dirname, "/templates/index.html"));
+  res.sendFile(getTemplate("index"));
 });
 
-app.listen(4000);
+app.get("/login", (req, res) => {
+  res.sendFile(getTemplate("login"));
+});
+
+app.get("/room", (req, res) => {
+  res.sendFile(getTemplate("room"));
+});
+
+const handleLoginRequest = (socket, msg) => {
+  if (Users.get(msg.name) !== null) {
+    let response = {
+      code: 400,
+      user: null
+    };
+    socket.emit("login response", response);
+    return;
+  } else {
+    var user = msg;
+    user.time = new Date().toLocaleString();
+    Users.add(user);
+    let response = {
+      code: 200,
+      user: user
+    };
+    socket.emit("login response", response);
+    return;
+  }
+};
+
+// manage login
+io.on(Connection, socket => {
+  socket.on("login request", msg => {
+    handleLoginRequest(socket, msg);
+  });
+});
+
+// manage chatroom entry
+io.of(Room).on(Connection, socket => {
+  let chat = new Chat(socket);
+  chat.loop();
+});
+
+server.listen(3000, () => {
+  console.log("listening on 3000");
+});

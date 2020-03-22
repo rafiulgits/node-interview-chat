@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>Chat Room</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.3.1/css/bootstrap.min.css"
+    />
+    <style>
+      form {
+        position: fixed;
+        bottom: 0;
+        width: inherit;
+        padding: 3px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container-fluid">
+      <div class="row">
+        <div class="col-sm-3">
+          <ul class="list-group" id="active-user-list"></ul>
+        </div>
+        <div class="col-sm-9" style="position: relative;">
+          <ul
+            class="list-group"
+            id="message-list"
+            style="height: 80vh; overflow-y: scroll;"
+          ></ul>
+
+          <form action="" class="form-inline">
+            <input
+              class="form-control"
+              style="width: 60%;"
+              autocomplete="off"
+              type="text"
+              id="m"
+            />
+            <button style="width: 6%;" class="btn btn-primary ml-2">
+              Send
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.0/jquery.min.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+      $(() => {
+        if (sessionStorage.getItem("user") === null) {
+          alert("you are not logged in");
+          window.location.replace("/login");
+        }
+      });
+      let user = JSON.parse(sessionStorage.getItem("user"));
+
+      var socket = io.connect("/room");
+      if (socket === null) {
+        alert("connection error");
+        window.location.replace("/login");
+      }
+
+      socket.emit("chat entry", user);
+
+      // display all previous messages
+      socket.on("previous messages", arr => {
+        arr.forEach(msg => {
+          let newItem = $("<li>")
+            .text(`${msg.username} : ${msg.body}`)
+            .addClass("list-group-item");
+          $("#message-list").append(newItem);
+        });
+      });
+
+      socket.on("message", msg => {
+        let newItem = $("<li>")
+          .text(`${msg.username} : ${msg.body}`)
+          .addClass("list-group-item");
+        $("#message-list").append(newItem);
+      });
+
+      socket.on("disconnect", () => {
+        alert("you are disconnected");
+        window.location.replace("/login");
+      });
+
+      socket.on("active users", users => {
+        $("#active-user-list").empty();
+        users.forEach(user => {
+          let item = $("<li>")
+            .addClass("list-group-item")
+            .text(user.name);
+          $("#active-user-list").append(item);
+        });
+      });
+
+      $("form").submit(e => {
+        e.preventDefault();
+        let message = {
+          username: user.name,
+          body: $("#m").val(),
+          time: new Date().toLocaleString()
+        };
+        socket.emit("message", message);
+        $("#m").val("");
+        return false;
+      });
+    </script>
+  </body>
+</html>

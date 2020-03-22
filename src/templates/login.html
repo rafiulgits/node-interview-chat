@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>Login | Chat Room</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.3.1/css/bootstrap.min.css"
+    />
+  </head>
+  <body>
+    <div class="container-fluid mt-5">
+      <div class="d-flex justify-content-center">
+        <div class="col-sm-6">
+          <form action="">
+            <input
+              placeholder="User Name"
+              type="text"
+              class="form-control m-2"
+              id="input-user-name"
+            />
+            <select class="form-control m-2" id="select-user-type">
+              <option value="Interviewer">Interviewer</option>
+              <option value="Candidate">Candidate</option>
+            </select>
+            <button class="btn-primary m-2 btn-block">Enter</button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.0/jquery.min.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+      $(() => {
+        var socket = io();
+
+        $("form").submit(event => {
+          event.preventDefault();
+          handleFormSubmit(event);
+        });
+
+        let handleFormSubmit = event => {
+          let userName = $("#input-user-name").val();
+          let userType = $("#select-user-type").val();
+          let requestBody = {
+            name: userName,
+            type: userType
+          };
+          socket.emit("login request", requestBody);
+        };
+
+        /*
+          response message object:
+          {
+            code : 200/400,
+            user : {
+              id : Client ID,
+              name : user name,
+              type : candidate/interviewer
+            }
+          }
+        */
+        socket.on("login response", msg => {
+          if (msg.code === 400) {
+            alert("A user already exists with this name");
+            return;
+          }
+          sessionStorage.setItem("user", JSON.stringify(msg.user));
+          window.location.replace("/room");
+        });
+      });
+    </script>
+  </body>
+</html>
