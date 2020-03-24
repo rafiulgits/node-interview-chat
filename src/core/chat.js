@@ -1,4 +1,4 @@
-import { Users, Messages } from "./db";
+import { Users, Messages, Problems } from "./db";
 import { Room } from "../../app";
 import { io } from "../../app";
 
@@ -7,6 +7,9 @@ const NewMessage = "message";
 const Disconnect = "disconnect";
 const PreviousMessages = "previous messages";
 const ActiveUsers = "active users";
+const AddProblem = "add problem";
+const AddSolution = "add solution";
+const PinnedProblems = "pinned problems";
 
 class Chat {
   constructor(socket) {
@@ -21,6 +24,14 @@ class Chat {
 
     this.socket.on(NewMessage, msg => {
       this.onMessage(msg);
+    });
+
+    this.socket.on(AddProblem, msg => {
+      this.onAddProblem(msg);
+    });
+
+    this.socket.on(AddSolution, msg => {
+      this.onAddSolution(msg);
     });
 
     this.socket.on(Disconnect, () => {
@@ -38,6 +49,7 @@ class Chat {
     user.id = this.socket.client.id;
     Users.update(user);
     this.socket.emit(PreviousMessages, Messages.getAll());
+    this.socket.emit(PinnedProblems, Problems.getAll());
     this.userJoinNotification();
   }
 
@@ -55,6 +67,16 @@ class Chat {
   onMessage(msg) {
     Messages.add(msg);
     io.of(Room).emit(NewMessage, msg);
+  }
+
+  onAddProblem(msg) {
+    Problems.add(msg);
+    io.of(Room).emit(AddProblem, msg);
+  }
+
+  onAddSolution(msg) {
+    Problems.addSolutionOn(msg.problemId, msg.solution);
+    io.of(Room).emit(AddSolution, msg);
   }
 
   onDisconnect() {

@@ -82,7 +82,71 @@ class MessageDB {
   }
 }
 
+class ProblemDB {
+  /*
+    problem = {
+        id: "random string",
+        question: "find second max of an array",
+        author: "username",
+        time: new Date().toLocaleString(),
+        solutions: [
+          {
+            problemId : "from problem"
+            author: "username",
+            time: new Date().toLocaleString(),
+            code: "code string",
+            language: "js"
+          }
+        ]
+      }
+  */
+  constructor() {
+    this._array = [];
+  }
+
+  add(instance) {
+    this._array.push(instance);
+  }
+
+  get(id) {
+    let result = this._array.find(problem => {
+      return problem.id === id;
+    });
+    if (typeof result === "undefined") {
+      return null;
+    }
+    return result;
+  }
+
+  update(instance) {
+    let index = this._array.findIndex(problem => {
+      return problem.id === instance.id;
+    });
+    if (index === -1) {
+      return false;
+    }
+    this._array[index] = instance;
+    return true;
+  }
+
+  addSolutionOn(id, solutionInstance) {
+    let index = this._array.findIndex(problem => {
+      return problem.id === id;
+    });
+    if (index === -1) {
+      return false;
+    }
+    this._array[index].solutions.push(solutionInstance);
+    return true;
+  }
+
+  getAll() {
+    return this._array;
+  }
+}
+
 var Users = new UserDB();
 var Messages = new MessageDB();
+var Problems = new ProblemDB();
 
-export { Users, Messages };
+export { Users, Messages, Problems };

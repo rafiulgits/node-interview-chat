@@ -61,7 +61,13 @@
         window.location.replace("/");
       }
 
-      socket.emit("chat entry", user);
+      const ChatEntry = "chat entry";
+      const NewMessage = "message";
+      const Disconnect = "disconnect";
+      const PreviousMessages = "previous messages";
+      const ActiveUsers = "active users";
+
+      socket.emit(ChatEntry, user);
 
       const displayNewMessage = msg => {
         $("#message-list").append(
@@ -82,24 +88,24 @@
       };
 
       // display all previous messages
-      socket.on("previous messages", arr => {
+      socket.on(PreviousMessages, arr => {
         arr.forEach(msg => {
           displayNewMessage(msg);
         });
         scrollToTop("#message-list");
       });
 
-      socket.on("message", msg => {
+      socket.on(NewMessage, msg => {
         displayNewMessage(msg);
         scrollToTop("#message-list");
       });
 
-      socket.on("disconnect", () => {
+      socket.on(Disconnect, () => {
         alert("you are disconnected");
         window.location.replace("/");
       });
 
-      socket.on("active users", users => {
+      socket.on(ActiveUsers, users => {
         $("#active-user-list").empty();
         users.forEach(user => {
           displayActiveUser(user);
@@ -113,19 +119,36 @@
           body: $("#input-message").val(),
           time: new Date().toLocaleString()
         };
-        socket.emit("message", message);
+        socket.emit(NewMessage, message);
         $("#input-message").val("");
         return false;
       });
     </script>
 
     <script>
+      const PinnedProblems = "pinned problems";
+      const AddProblem = "add problem";
+      const AddSolution = "add solution";
+      // const user = JSON.parse(sessionStorage.getItem("user"));
+
       $(() => {
-        let user = JSON.parse(sessionStorage.getItem("user"));
-        if (user.type.toLowerCase() === "interviewer") {
+        let currentUser = JSON.parse(sessionStorage.getItem("user"));
+        if (currentUser.type.toLowerCase() === "interviewer") {
           placeAddProblemForm();
           return;
         }
+      });
+
+      // display pinned problems
+      socket.on(PinnedProblems, arr => {
+        arr.forEach(problem => {
+          addNewProblemInDOM(problem);
+          if (problem.solutions.length > 0) {
+            problem.solutions.forEach(solution => {
+              addSolutionInDOM(problem.id, solution);
+            });
+          }
+        });
       });
 
       const placeAddProblemForm = () => {
@@ -148,23 +171,21 @@
       };
 
       const generateRandomString = () => {
-        let randomStr = Math.random()
-          .toString(36)
-          .substr(2, 10);
-        try {
-          let n = Number.parseInt(randomStr[0]);
-          return (
-            String.fromCharCode(n + 70) + randomStr.substr(1, randomStr.length)
+        let characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+        let charactersLength = characters.length;
+        var result = "";
+        for (var i = 0; i < 10; i++) {
+          result += characters.charAt(
+            Math.floor(Math.random() * charactersLength)
           );
-        } catch (err) {
-          return randomStr;
         }
+        return result;
       };
 
       /*
- 
+
       ID pattern:
- 
+
       problem-list
       problem-id-${id}
       solutions-${problem_id}
@@ -178,7 +199,7 @@
         }
       };
 
-      const addSolutionInDOM = (problem, solution) => {
+      const addSolutionInDOM = (problemId, solution) => {
         let preview = $("<li>")
           .attr("class", "list-group-item")
           .append(
@@ -190,7 +211,7 @@
                   .attr("class", `language-${solution.lang}`)
               ),
 
-            $("<small>").text(`by ${solution.user} at ${solution.time}`),
+            $("<small>").text(`by ${solution.author} at ${solution.time}`),
             $("<button>")
               .text("Run")
               .attr("class", "btn btn-success btn-sm float-right")
@@ -203,7 +224,7 @@
               })
           );
 
-        $(`#solutions-${problem.id}`).append(preview);
+        $(`#solutions-${problemId}`).append(preview);
         highlightCode();
       };
 
@@ -220,10 +241,10 @@
         let solution = {
           code: code,
           lang: lang,
-          user: JSON.parse(sessionStorage.getItem("user")).name,
+          author: user.name,
           time: new Date().toLocaleString()
         };
-        addSolutionInDOM(problem, solution);
+        socket.emit(AddSolution, { problemId: problem.id, solution });
       };
 
       const buildSolutionFormOn = problem => {
@@ -266,7 +287,7 @@
               .attr("data-toggle", "collapse")
               .attr("aria-expanded", "false")
               .attr("href", `#${problem.id}`)
-              .text(problem.question)
+              .text(`${problem.question} - set by ${problem.author}`)
           );
 
         let solutionForm = buildSolutionFormOn(problem);
@@ -289,8 +310,6 @@
         $("#problem-list").prepend(card);
       };
 
-      var problemList = [];
-
       const createProblemHandler = event => {
         event.preventDefault();
         let question = $("#input-new-problem").val();
@@ -304,13 +323,25 @@
           id: generateRandomString(),
           question: question,
           time: new Date().toLocaleString(),
-          user: "rafi",
+          author: user.name,
           solutions: []
         };
-        problemList.push(problem);
-        addNewProblemInDOM(problem);
+
+        // broadcast this problem
+        socket.emit(AddProblem, problem);
+
         $("#input-new-problem").val("");
       };
+
+      // receive new problem
+      socket.on(AddProblem, msg => {
+        addNewProblemInDOM(msg);
+      });
+
+      // receive a new solution of a problem
+      socket.on(AddSolution, msg => {
+        addSolutionInDOM(msg.problemId, msg.solution);
+      });
     </script>
   </body>
 </html>
