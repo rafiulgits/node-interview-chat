@@ -131,9 +131,16 @@
 
     <script>
       const generateRandomString = () => {
-        return Math.random()
+        let randomStr = Math.random()
           .toString(36)
           .substr(2, 10);
+        try {
+          let n = Number.parseInt(randomStr[0]);
+          randomStr[0] = String.fromCharCode(n + 70);
+          return randomStr;
+        } catch (err) {
+          return randomStr;
+        }
       };
 
       /*
