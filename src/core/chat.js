@@ -44,7 +44,7 @@ class Chat {
   userJoinNotification() {
     let notification = {
       username: "server",
-      body: `${this.user.name} joined`,
+      body: `${this.user.name} joined as ${this.user.type}`,
       time: new Date().toLocaleString()
     };
     Messages.add(notification);
@@ -58,11 +58,15 @@ class Chat {
   }
 
   onDisconnect() {
-    let notification = {
+    var notification = {
       username: "server",
-      body: `${this.user.name} leave`,
       time: new Date().toLocaleString()
     };
+    try {
+      notification.body = `${this.user.type} ${this.user.name} leave`;
+    } catch (err) {
+      notification.body = "someone leave from this conversation";
+    }
     Users.remove(this.user);
     Messages.add(notification);
     io.of(Room).emit(NewMessage, notification);

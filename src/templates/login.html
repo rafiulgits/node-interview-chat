@@ -45,6 +45,10 @@
         let handleFormSubmit = event => {
           let userName = $("#input-user-name").val();
           let userType = $("#select-user-type").val();
+          if (userName.trim() === "") {
+            alert("You must entry a username");
+            return;
+          }
           let requestBody = {
             name: userName,
             type: userType

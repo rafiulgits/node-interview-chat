@@ -122,7 +122,6 @@
     <script>
       $(() => {
         let user = JSON.parse(sessionStorage.getItem("user"));
-        console.log(user.type.toLowerCase());
         if (user.type.toLowerCase() === "interviewer") {
           placeAddProblemForm();
           return;
@@ -154,8 +153,9 @@
           .substr(2, 10);
         try {
           let n = Number.parseInt(randomStr[0]);
-          randomStr[0] = String.fromCharCode(n + 70);
-          return randomStr;
+          return (
+            String.fromCharCode(n + 70) + randomStr.substr(1, randomStr.length)
+          );
         } catch (err) {
           return randomStr;
         }
