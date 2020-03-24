@@ -37,17 +37,7 @@
     <div class="block right-block">
       <h4 style="text-align: center;">Problems</h4>
 
-      <div id="problem-list">
-        <form action="" id="add-problem-form">
-          <input
-            type="text"
-            id="input-new-problem"
-            class="form-control"
-            placeholder="You Problem"
-          />
-          <button class="btn btn-success">Add Problem</button>
-        </form>
-      </div>
+      <div id="problem-list"></div>
     </div>
 
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
@@ -130,6 +120,34 @@
     </script>
 
     <script>
+      $(() => {
+        let user = JSON.parse(sessionStorage.getItem("user"));
+        console.log(user.type.toLowerCase());
+        if (user.type.toLowerCase() === "interviewer") {
+          placeAddProblemForm();
+          return;
+        }
+      });
+
+      const placeAddProblemForm = () => {
+        $("#problem-list").append(
+          $("<form>")
+            .attr("id", "add-problem-form")
+            .attr("action", "")
+            .submit(event => createProblemHandler(event))
+            .append(
+              $("<input>")
+                .attr("id", "input-new-problem")
+                .attr("type", "text")
+                .attr("class", "form-control")
+                .attr("placeholder", "Your Problem"),
+              $("<button>")
+                .attr("class", "btn btn-success")
+                .text("Add Problem")
+            )
+        );
+      };
+
       const generateRandomString = () => {
         let randomStr = Math.random()
           .toString(36)
@@ -273,7 +291,7 @@
 
       var problemList = [];
 
-      $("#add-problem-form").on("submit", event => {
+      const createProblemHandler = event => {
         event.preventDefault();
         let question = $("#input-new-problem").val();
         question = question.trim();
@@ -292,7 +310,7 @@
         problemList.push(problem);
         addNewProblemInDOM(problem);
         $("#input-new-problem").val("");
-      });
+      };
     </script>
   </body>
 </html>
