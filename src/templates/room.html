@@ -9,31 +9,58 @@
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.3.1/css/bootstrap.min.css"
     />
+    <link
+      rel="stylesheet"
+      href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.11.0/styles/default.min.css"
+    />
     <link rel="stylesheet" href="/static/room.css" />
   </head>
   <body>
-    <div class="left-block">
-      <h6 class="text-center">Active Users</h6>
+    <div class="block left-block">
+      <h4 class="text-center">Active Users</h4>
       <ul id="active-user-list"></ul>
     </div>
-    <div class="right-block">
-      <ul id="message-list"></ul>
+
+    <div class="block middle-block">
+      <h4 style="text-align:center">Conversations</h4>
+
+      <ul id="message-list" style="padding: 5px;"></ul>
 
       <div id="form-container">
-        <form action="">
-          <input id="input-message" type="text" placeholder="Your message" />
+        <form action="" id="conversation-form">
+          <input type="text" id="input-message" placeholder="Your message" />
           <button>Send</button>
         </form>
       </div>
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.0/jquery.min.js"></script>
+    <div class="block right-block">
+      <h4 style="text-align: center;">Problems</h4>
+
+      <div id="problem-list">
+        <form action="" id="add-problem-form">
+          <input
+            type="text"
+            id="input-new-problem"
+            class="form-control"
+            placeholder="You Problem"
+          />
+          <button class="btn btn-success">Add Problem</button>
+        </form>
+      </div>
+    </div>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/google/code-prettify@master/loader/run_prettify.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.11.0/highlight.min.js"></script>
     <script src="/socket.io/socket.io.js"></script>
     <script>
       $(() => {
         if (sessionStorage.getItem("user") === null) {
           alert("you are not logged in");
-          window.location.replace("/login");
+          window.location.replace("/");
         }
       });
       let user = JSON.parse(sessionStorage.getItem("user"));
@@ -41,7 +68,7 @@
       var socket = io.connect("/room");
       if (socket === null) {
         alert("connection error");
-        window.location.replace("/login");
+        window.location.replace("/");
       }
 
       socket.emit("chat entry", user);
@@ -79,7 +106,7 @@
 
       socket.on("disconnect", () => {
         alert("you are disconnected");
-        window.location.replace("/login");
+        window.location.replace("/");
       });
 
       socket.on("active users", users => {
@@ -89,7 +116,7 @@
         });
       });
 
-      $("form").submit(e => {
+      $("#conversation-form").submit(e => {
         e.preventDefault();
         let message = {
           username: user.name,
@@ -99,6 +126,165 @@
         socket.emit("message", message);
         $("#input-message").val("");
         return false;
+      });
+    </script>
+
+    <script>
+      const generateRandomString = () => {
+        return Math.random()
+          .toString(36)
+          .substr(2, 10);
+      };
+
+      /*
+ 
+      ID pattern:
+ 
+      problem-list
+      problem-id-${id}
+      solutions-${problem_id}
+      solution-${solution_id}-${problem_id}
+      */
+
+      const highlightCode = () => {
+        var pres = document.querySelectorAll("pre>code");
+        for (var i = 0; i < pres.length; i++) {
+          hljs.highlightBlock(pres[i]);
+        }
+      };
+
+      const addSolutionInDOM = (problem, solution) => {
+        let preview = $("<li>")
+          .attr("class", "list-group-item")
+          .append(
+            $("<pre>")
+              .attr("class", "prettyprint")
+              .append(
+                $("<code>")
+                  .text(solution.code)
+                  .attr("class", `language-${solution.lang}`)
+              ),
+
+            $("<small>").text(`by ${solution.user} at ${solution.time}`),
+            $("<button>")
+              .text("Run")
+              .attr("class", "btn btn-success btn-sm float-right")
+              .click(event => {
+                try {
+                  alert(eval(solution.code));
+                } catch (err) {
+                  alert("runtime error");
+                }
+              })
+          );
+
+        $(`#solutions-${problem.id}`).append(preview);
+        highlightCode();
+      };
+
+      const solutionHandlerOf = problem => {
+        event.preventDefault();
+        let code = $(`#${problem.id}-solution-code`).val();
+        if (code === "") {
+          alert("You must give a piece of code");
+          return;
+        }
+        let lang = $(`#${problem.id}-solution-lang`).val();
+        $(`#${problem.id}-solution-code`).val("");
+
+        let solution = {
+          code: code,
+          lang: lang,
+          user: JSON.parse(sessionStorage.getItem("user")).name,
+          time: new Date().toLocaleString()
+        };
+        addSolutionInDOM(problem, solution);
+      };
+
+      const buildSolutionFormOn = problem => {
+        return $("<form>")
+          .attr("id", `${problem.id}-solution-form`)
+          .submit(event => solutionHandlerOf(problem))
+          .append(
+            $("<textarea>")
+              .attr("style", "width:100%;")
+              .attr("class", "form-control")
+              .attr("placeholder", "Your solution")
+              .attr("id", `${problem.id}-solution-code`),
+
+            $("<select>")
+              .attr("class", "form-control")
+              .attr("id", `${problem.id}-solution-lang`)
+              .append(
+                $("<option>")
+                  .attr("value", "javascript")
+                  .text("JavaScript"),
+                $("<option>")
+                  .attr("value", "python")
+                  .text("Python")
+              ),
+
+            $("<button>")
+              .attr("class", "btn btn-primary")
+              .text("Submit")
+          );
+      };
+
+      const addNewProblemInDOM = problem => {
+        let card = $("<div>");
+
+        let header = $("<div>")
+          .addClass("card-header")
+          .append(
+            $("<a>")
+              .attr("class", "card-link")
+              .attr("data-toggle", "collapse")
+              .attr("aria-expanded", "false")
+              .attr("href", `#${problem.id}`)
+              .text(problem.question)
+          );
+
+        let solutionForm = buildSolutionFormOn(problem);
+
+        let body = $("<div>")
+          .attr("id", `${problem.id}`)
+          .attr("class", "collapse hide")
+          .attr("data-parent", "#problem-list")
+          .append(
+            $("<div>")
+              .attr("class", "card-body")
+              .append(
+                $("<ul>")
+                  .attr("class", "list-group")
+                  .attr("id", `solutions-${problem.id}`),
+                solutionForm
+              )
+          );
+        card.append(header, body);
+        $("#problem-list").prepend(card);
+      };
+
+      var problemList = [];
+
+      $("#add-problem-form").on("submit", event => {
+        event.preventDefault();
+        let question = $("#input-new-problem").val();
+        question = question.trim();
+        if (question === "") {
+          alert("You should type any statement");
+          return;
+        }
+
+        let problem = {
+          id: generateRandomString(),
+          question: question,
+          time: new Date().toLocaleString(),
+          user: "rafi",
+          solutions: []
+        };
+        problemList.push(problem);
+        addNewProblemInDOM(problem);
+        $("#input-new-problem").val("");
       });
     </script>
   </body>

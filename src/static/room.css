@@ -1,35 +1,53 @@
 body,
 html {
-  min-width: 600px;
+  min-width: 700px;
+  max-width: 100vw;
+  width: 100%;
+  height: 100vh;
+  max-height: 100vh;
+  min-height: 100vh;
   position: relative;
   display: flex;
   border: 0px;
   margin: 0px;
   padding: 0px;
-  width: 100%;
-  max-width: 100vw;
+}
+
+.block {
+  margin: 0px;
+  padding: 0px;
+  height: 100%;
+  min-height: 100%;
+  max-height: 100%;
 }
 
 .left-block {
   width: 20%;
   margin: 0px;
-  padding-top: 10px;
+  padding-top: 0px;
   height: 100vh;
-  overflow-y: scroll;
   background-color: rgba(21, 221, 38, 0.247);
 }
 
-.right-block {
-  width: 79%;
+.right-block,
+.middle-block {
+  width: 40%;
   height: 100vh;
   position: relative;
-  padding: 5px;
   margin: 0px;
+  padding: 0px;
 }
+
+.content-container {
+  padding: 5px;
+}
+
 #active-user-list {
   list-style: none;
   padding: 0px;
   margin: 0px 2px 2px 2px;
+  height: 90vh;
+  overflow-y: hidden, scroll;
 }
 
 #active-user-list li {
@@ -37,7 +55,7 @@ html {
   text-align: left;
   color: green;
   margin: 0px 2px 2px 0px;
-  padding-left: 5px;
+  padding: 2px 2px 2px 5px;
   background-color: rgba(21, 91, 221, 0.247);
   border-radius: 5px;
 }
@@ -55,18 +73,18 @@ html {
   margin: 0px;
   padding: 0px;
 }
-form {
+#conversation-form {
   margin: 0px;
   width: 100%;
 }
-form input {
+#conversation-form input {
   width: 80%;
   padding: 5px 10px;
   box-sizing: border-box;
   border: 2px solid #ccc;
   border-radius: 4px;
 }
-form button {
+#conversation-form button {
   width: 18%;
   border: 1px;
   background-color: #4caf50;
@@ -78,7 +96,7 @@ form button {
   cursor: pointer;
 }
 #message-list {
-  height: 90vh;
+  height: 80vh;
   overflow-y: scroll;
   list-style: none;
   padding: 0px;
@@ -101,4 +119,14 @@ form button {
 #message-list li span {
   font-weight: bold;
   padding: 2px 5px 2px 2px;
+}
+
+#problem-list {
+  height: 90vh;
+  list-style: none;
+  overflow-y: scroll;
+}
+#problem-list ul {
+  max-height: 100%;
+  overflow-y: scroll;
 }

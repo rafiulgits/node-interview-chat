@@ -21,10 +21,6 @@ const getStaticFile = file => {
 };
 
 app.get("/", (req, res) => {
-  res.sendFile(getTemplate("index"));
-});
-
-app.get("/login", (req, res) => {
   res.sendFile(getTemplate("login"));
 });
 
