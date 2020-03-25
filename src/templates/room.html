@@ -18,6 +18,11 @@
   <body>
     <div class="block left-block">
       <h4 class="text-center">Active Users</h4>
+      <div class="d-flex justify-content-center">
+        <button class="btn btn-sm btn-danger m-2" id="leave-chat">
+          Leave Chat
+        </button>
+      </div>
       <ul id="active-user-list"></ul>
     </div>
 
@@ -45,6 +50,7 @@
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
     <script src="https://cdn.jsdelivr.net/gh/google/code-prettify@master/loader/run_prettify.js"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.11.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.19.2/axios.min.js"></script>
     <script src="/socket.io/socket.io.js"></script>
     <script>
       $(() => {
@@ -123,6 +129,15 @@
         $("#input-message").val("");
         return false;
       });
+
+      $("#leave-chat").on("click", event => {
+        sessionStorage.clear();
+        try {
+          socket.disconnect();
+        } catch (err) {
+          window.location.replace("/");
+        }
+      });
     </script>
 
     <script>
@@ -199,6 +214,29 @@
         }
       };
 
+      const runCodeScript = (lang, code) => {
+        try {
+          if (lang.toLowerCase() === "javascript") {
+            alert(eval(code));
+            return;
+          } else if (lang.toLowerCase() === "python") {
+            let body = JSON.stringify({ code: code });
+            axios
+              .post("http://localhost:3000/runtime/py", body, {
+                headers: { "Content-Type": "application/json" }
+              })
+              .then(res => {
+                alert(res.data.result);
+              })
+              .catch(err => {
+                alert("runtime error");
+              });
+          }
+        } catch (err) {
+          alert("runtime error");
+        }
+      };
+
       const addSolutionInDOM = (problemId, solution) => {
         let preview = $("<li>")
           .attr("class", "list-group-item")
@@ -207,20 +245,23 @@
               .attr("class", "prettyprint")
               .append(
                 $("<code>")
+                  .dblclick(event => {
+                    let selectedText = window.getSelection().focusNode.data;
+                    let previousText = $("#input-message").val();
+                    $("#input-message").val(`${previousText} ${selectedText}`);
+                  })
                   .text(solution.code)
                   .attr("class", `language-${solution.lang}`)
               ),
 
-            $("<small>").text(`by ${solution.author} at ${solution.time}`),
+            $("<small>").text(
+              `${solution.lang} by ${solution.author} at ${solution.time}`
+            ),
             $("<button>")
               .text("Run")
               .attr("class", "btn btn-success btn-sm float-right")
               .click(event => {
-                try {
-                  alert(eval(solution.code));
-                } catch (err) {
-                  alert("runtime error");
-                }
+                runCodeScript(solution.lang, solution.code);
               })
           );
 

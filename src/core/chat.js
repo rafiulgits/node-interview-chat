@@ -80,21 +80,21 @@ class Chat {
   }
 
   onDisconnect() {
-    var notification = {
-      username: "server",
-      time: new Date().toLocaleString()
-    };
     try {
-      notification.body = `${this.user.type} ${this.user.name} leave`;
-    } catch (err) {
-      notification.body = "someone leave from this conversation";
-    }
-    Users.remove(this.user);
-    Messages.add(notification);
-    io.of(Room).emit(NewMessage, notification);
-    io.of(Room).emit(ActiveUsers, Users.getAll());
-    console.log("disconnected client : " + this.user.id);
-    this.dismiss();
+      let notification = {
+        username: "server",
+        time: new Date().toLocaleString(),
+        body: `${this.user.type} ${this.user.name} leave`
+      };
+      Users.remove(this.user);
+      Messages.add(notification);
+      io.of(Room).emit(NewMessage, notification);
+      io.of(Room).emit(ActiveUsers, Users.getAll());
+      console.log("disconnected client : " + this.user.id);
+    } catch (err) {}
+    try {
+      this.dismiss();
+    } catch (err) {}
   }
 
   dismiss() {

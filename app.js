@@ -4,8 +4,12 @@ import path from "path";
 import http from "http";
 import { Users } from "./src/core/db";
 import Chat from "./src/core/chat";
+import BodyParser from "body-parser";
+import { PythonShell } from "python-shell";
 
-export var app = express();
+var app = express();
+app.use(BodyParser.json());
+
 export var server = http.createServer(app);
 export var io = new socketio(server);
 export const Room = "room";
@@ -31,6 +35,20 @@ app.get("/room", (req, res) => {
 app.get("/static/:file", (req, res) => {
   let file = req.params.file;
   res.sendFile(getStaticFile(file));
+});
+
+app.post("/runtime/py", (req, res) => {
+  let code = req.body.code;
+  PythonShell.runString(code, null, (err, result) => {
+    if (err) {
+      res.writeHead(400, {});
+      res.write("runtime error");
+      return res.end();
+    }
+    res.writeHead(200, {});
+    res.write(JSON.stringify({ result: result }));
+    return res.end();
+  });
 });
 
 const handleLoginRequest = (socket, msg) => {
