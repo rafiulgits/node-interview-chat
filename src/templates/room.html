@@ -52,6 +52,7 @@
     <script src="https:////cdnjs.cloudflare.com/ajax/libs/highlight.js/9.11.0/highlight.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.19.2/axios.min.js"></script>
     <script src="/socket.io/socket.io.js"></script>
+    <script src="/static/drawdown.js"></script>
     <script>
       $(() => {
         if (sessionStorage.getItem("user") === null) {
@@ -76,11 +77,12 @@
       socket.emit(ChatEntry, user);
 
       const displayNewMessage = msg => {
-        $("#message-list").append(
-          $("<li>").append(
-            $("<p>").append($("<span>").text(msg.username), msg.body)
-          )
-        );
+        // filter markdown in message body
+        let messageBody = msg.body.split("#").join("");
+        let fullMessage = markdown(`**${msg.username}** ${messageBody}`);
+
+        $("#message-list").append($("<li>").append($("<p>").html(fullMessage)));
+        highlightCode();
       };
 
       const displayActiveUser = user => {
@@ -249,7 +251,9 @@
                   .dblclick(event => {
                     let selectedText = window.getSelection().focusNode.data;
                     let previousText = $("#input-message").val();
-                    $("#input-message").val(`${previousText} ${selectedText}`);
+                    $("#input-message").val(
+                      `${previousText} \`${selectedText}\``
+                    );
                   })
                   .text(solution.code)
                   .attr("class", `language-${solution.lang}`)
@@ -270,7 +274,7 @@
         highlightCode();
       };
 
-      const solutionHandlerOf = problem => {
+      const problemSolutionHandler = problem => {
         event.preventDefault();
         let code = $(`#${problem.id}-solution-code`).val();
         if (code === "") {
@@ -292,7 +296,7 @@
       const buildSolutionFormOn = problem => {
         return $("<form>")
           .attr("id", `${problem.id}-solution-form`)
-          .submit(event => solutionHandlerOf(problem))
+          .submit(event => problemSolutionHandler(problem))
           .append(
             $("<textarea>")
               .attr("style", "width:100%;")
@@ -339,7 +343,7 @@
               .attr("class", "btn btn-sm btn-primary ml-2")
               .text("edit")
               .click(event => {
-                updateHandlerOf(problem, event);
+                problemUpdateHandler(problem, event);
               })
           );
         }
@@ -364,12 +368,14 @@
         $("#problem-list").prepend(card);
       };
 
-      const updateHandlerOf = (problem, event) => {
+      const problemUpdateHandler = (problem, event) => {
         event.preventDefault();
         let updatedQuestion = prompt("Update", problem.question);
-        problem.question = updatedQuestion;
-        socket.emit(UpdateProblem, problem);
-        alert("Updated");
+        if (updatedQuestion !== null) {
+          problem.question = updatedQuestion;
+          socket.emit(UpdateProblem, problem);
+          alert("Updated");
+        }
       };
 
       const createProblemHandler = event => {
