@@ -49,7 +49,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
     <script src="https://cdn.jsdelivr.net/gh/google/code-prettify@master/loader/run_prettify.js"></script>
-    <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.11.0/highlight.min.js"></script>
+    <script src="https:////cdnjs.cloudflare.com/ajax/libs/highlight.js/9.11.0/highlight.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.19.2/axios.min.js"></script>
     <script src="/socket.io/socket.io.js"></script>
     <script>
@@ -144,6 +144,7 @@
       const PinnedProblems = "pinned problems";
       const AddProblem = "add problem";
       const AddSolution = "add solution";
+      const UpdateProblem = "update problem";
       // const user = JSON.parse(sessionStorage.getItem("user"));
 
       $(() => {
@@ -328,8 +329,20 @@
               .attr("data-toggle", "collapse")
               .attr("aria-expanded", "false")
               .attr("href", `#${problem.id}`)
+              .attr("id", `problem-id-${problem.id}`)
               .text(`${problem.question} - set by ${problem.author}`)
           );
+
+        if (problem.author === user.name) {
+          header.append(
+            $("<button>")
+              .attr("class", "btn btn-sm btn-primary ml-2")
+              .text("edit")
+              .click(event => {
+                updateHandlerOf(problem, event);
+              })
+          );
+        }
 
         let solutionForm = buildSolutionFormOn(problem);
 
@@ -349,6 +362,14 @@
           );
         card.append(header, body);
         $("#problem-list").prepend(card);
+      };
+
+      const updateHandlerOf = (problem, event) => {
+        event.preventDefault();
+        let updatedQuestion = prompt("Update", problem.question);
+        problem.question = updatedQuestion;
+        socket.emit(UpdateProblem, problem);
+        alert("Updated");
       };
 
       const createProblemHandler = event => {
@@ -374,6 +395,12 @@
         $("#input-new-problem").val("");
       };
 
+      const updateProblemInDOM = problem => {
+        $(`#problem-id-${problem.id}`).text(
+          `${problem.question} - set by ${problem.author}`
+        );
+      };
+
       // receive new problem
       socket.on(AddProblem, msg => {
         addNewProblemInDOM(msg);
@@ -382,6 +409,10 @@
       // receive a new solution of a problem
       socket.on(AddSolution, msg => {
         addSolutionInDOM(msg.problemId, msg.solution);
+      });
+
+      socket.on(UpdateProblem, msg => {
+        updateProblemInDOM(msg);
       });
     </script>
   </body>

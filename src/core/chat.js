@@ -10,6 +10,7 @@ const ActiveUsers = "active users";
 const AddProblem = "add problem";
 const AddSolution = "add solution";
 const PinnedProblems = "pinned problems";
+const UpdateProblem = "update problem";
 
 class Chat {
   constructor(socket) {
@@ -32,6 +33,10 @@ class Chat {
 
     this.socket.on(AddSolution, msg => {
       this.onAddSolution(msg);
+    });
+
+    this.socket.on(UpdateProblem, msg => {
+      this.onUpdateProblem(msg);
     });
 
     this.socket.on(Disconnect, () => {
@@ -77,6 +82,11 @@ class Chat {
   onAddSolution(msg) {
     Problems.addSolutionOn(msg.problemId, msg.solution);
     io.of(Room).emit(AddSolution, msg);
+  }
+
+  onUpdateProblem(msg) {
+    Problems.update(msg);
+    io.of(Room).emit(UpdateProblem, msg);
   }
 
   onDisconnect() {
