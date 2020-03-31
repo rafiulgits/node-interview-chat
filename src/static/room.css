@@ -11,6 +11,7 @@ html {
   border: 0px;
   margin: 0px;
   padding: 0px;
+  overflow: hidden;
 }
 
 .block {
@@ -79,7 +80,8 @@ html {
 }
 #conversation-form input {
   width: 80%;
-  padding: 5px 10px;
+  padding: 10px 15px;
+  font-size: 12px;
   box-sizing: border-box;
   border: 2px solid #ccc;
   border-radius: 4px;
@@ -109,7 +111,9 @@ html {
 }
 
 #message-list li p {
-  background-color: rgb(225, 229, 236);
+  border: 1px;
+  border-style: solid;
+  border-color: rgb(14, 89, 160);
   color: black;
   margin: 0px;
   padding: 2px 4px;
@@ -130,4 +134,8 @@ html {
 #problem-list ul {
   max-height: 100%;
   overflow-y: scroll;
+}
+
+textarea.form-control {
+  font-size: 14px;
 }

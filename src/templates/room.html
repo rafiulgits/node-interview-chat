@@ -50,6 +50,7 @@
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
     <script src="https://cdn.jsdelivr.net/gh/google/code-prettify@master/loader/run_prettify.js"></script>
     <script src="https:////cdnjs.cloudflare.com/ajax/libs/highlight.js/9.11.0/highlight.min.js"></script>
+    <script src="/static/highlight-line.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.19.2/axios.min.js"></script>
     <script src="/socket.io/socket.io.js"></script>
     <script src="/static/drawdown.js"></script>
@@ -76,6 +77,7 @@
         var pres = document.querySelectorAll("pre>code");
         for (var i = 0; i < pres.length; i++) {
           hljs.highlightBlock(pres[i]);
+          hljs.lineNumbersBlock(pres[i]);
         }
       };
 
@@ -99,6 +101,18 @@
           }
         } catch (err) {
           alert("runtime error");
+        }
+      };
+
+      const onCodeLineSelect = event => {
+        try {
+          let code = event.target.getAttribute("codeline");
+          if (code !== "") {
+            let previousText = $("#input-message").val();
+            $("#input-message").val(previousText + " `" + code + "`");
+          }
+        } catch (err) {
+          alert("unable to copy code line");
         }
       };
     </script>
@@ -387,8 +401,8 @@
         let messageBody = msg.body.split("#").join("");
         let fullMessage = markdown(`**${msg.username}** ${messageBody}`);
 
-        $("#message-list").append($("<li>").append($("<p>").html(fullMessage)));
-        highlightCode();
+        $("#message-list").append($("<li>").html(fullMessage));
+        // highlightCode();
       };
 
       DOM.Peoples.active = user => {
@@ -454,9 +468,6 @@
                 $("<code>")
                   .text(solution.code)
                   .attr("class", `language-${solution.lang}`)
-                  .bind("mouseup", event => {
-                    console.log(window.getSelection());
-                  })
               ),
             // Meta
             $("<small>").text(
