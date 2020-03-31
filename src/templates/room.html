@@ -53,139 +53,11 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.19.2/axios.min.js"></script>
     <script src="/socket.io/socket.io.js"></script>
     <script src="/static/drawdown.js"></script>
+
+    <!-- static functions -->
     <script>
-      $(() => {
-        if (sessionStorage.getItem("user") === null) {
-          alert("you are not logged in");
-          window.location.replace("/");
-        }
-      });
-      let user = JSON.parse(sessionStorage.getItem("user"));
-
-      var socket = io.connect("/room");
-      if (socket === null) {
-        alert("connection error");
-        window.location.replace("/");
-      }
-
-      const ChatEntry = "chat entry";
-      const NewMessage = "message";
-      const Disconnect = "disconnect";
-      const PreviousMessages = "previous messages";
-      const ActiveUsers = "active users";
-
-      socket.emit(ChatEntry, user);
-
-      const displayNewMessage = msg => {
-        // filter markdown in message body
-        let messageBody = msg.body.split("#").join("");
-        let fullMessage = markdown(`**${msg.username}** ${messageBody}`);
-
-        $("#message-list").append($("<li>").append($("<p>").html(fullMessage)));
-        highlightCode();
-      };
-
-      const displayActiveUser = user => {
-        $("#active-user-list").append(
-          $("<li>").append(user.name, $("<br>"), $("<span>").text(user.type))
-        );
-      };
-
       const scrollToTop = element => {
         $(element).animate({ scrollTop: $(element)[0].scrollHeight }, 1000);
-      };
-
-      // display all previous messages
-      socket.on(PreviousMessages, arr => {
-        arr.forEach(msg => {
-          displayNewMessage(msg);
-        });
-        scrollToTop("#message-list");
-      });
-
-      socket.on(NewMessage, msg => {
-        displayNewMessage(msg);
-        scrollToTop("#message-list");
-      });
-
-      socket.on(Disconnect, () => {
-        alert("you are disconnected");
-        window.location.replace("/");
-      });
-
-      socket.on(ActiveUsers, users => {
-        $("#active-user-list").empty();
-        users.forEach(user => {
-          displayActiveUser(user);
-        });
-      });
-
-      $("#conversation-form").submit(e => {
-        e.preventDefault();
-        let message = {
-          username: user.name,
-          body: $("#input-message").val(),
-          time: new Date().toLocaleString()
-        };
-        socket.emit(NewMessage, message);
-        $("#input-message").val("");
-        return false;
-      });
-
-      $("#leave-chat").on("click", event => {
-        sessionStorage.clear();
-        try {
-          socket.disconnect();
-        } catch (err) {
-          window.location.replace("/");
-        }
-      });
-    </script>
-
-    <script>
-      const PinnedProblems = "pinned problems";
-      const AddProblem = "add problem";
-      const AddSolution = "add solution";
-      const UpdateProblem = "update problem";
-      // const user = JSON.parse(sessionStorage.getItem("user"));
-
-      $(() => {
-        let currentUser = JSON.parse(sessionStorage.getItem("user"));
-        if (currentUser.type.toLowerCase() === "interviewer") {
-          placeAddProblemForm();
-          return;
-        }
-      });
-
-      // display pinned problems
-      socket.on(PinnedProblems, arr => {
-        arr.forEach(problem => {
-          addNewProblemInDOM(problem);
-          if (problem.solutions.length > 0) {
-            problem.solutions.forEach(solution => {
-              addSolutionInDOM(problem.id, solution);
-            });
-          }
-        });
-      });
-
-      const placeAddProblemForm = () => {
-        $("#problem-list").append(
-          $("<form>")
-            .attr("id", "add-problem-form")
-            .attr("action", "")
-            .submit(event => createProblemHandler(event))
-            .append(
-              $("<input>")
-                .attr("id", "input-new-problem")
-                .attr("type", "text")
-                .attr("class", "form-control")
-                .attr("placeholder", "Your Problem"),
-              $("<button>")
-                .attr("class", "btn btn-success")
-                .text("Add Problem")
-            )
-        );
       };
 
       const generateRandomString = () => {
@@ -199,16 +71,6 @@
         }
         return result;
       };
-
-      /*
-
-      ID pattern:
-
-      problem-list
-      problem-id-${id}
-      solutions-${problem_id}
-      solution-${solution_id}-${problem_id}
-      */
 
       const highlightCode = () => {
         var pres = document.querySelectorAll("pre>code");
@@ -239,48 +101,213 @@
           alert("runtime error");
         }
       };
+    </script>
 
-      const addSolutionInDOM = (problemId, solution) => {
-        let preview = $("<li>")
-          .attr("class", "list-group-item")
-          .append(
-            $("<pre>")
-              .attr("class", "prettyprint")
-              .append(
-                $("<code>")
-                  .dblclick(event => {
-                    let selectedText = window.getSelection().focusNode.data;
-                    let previousText = $("#input-message").val();
-                    $("#input-message").val(
-                      `${previousText} \`${selectedText}\``
-                    );
-                  })
-                  .text(solution.code)
-                  .attr("class", `language-${solution.lang}`)
-              ),
+    <!-- Driver -->
+    <script>
+      var Startup = {
+        isLoaded: false,
+        Loaders: {},
+        Binders: {}
+      };
+      var user;
+      $(() => {
+        // startup loaders
+        Startup.Loaders.log();
+        Startup.isLoaded = true;
+        // binders
+        Startup.Binders.onWriteMessage();
+        Startup.Binders.onLeaveRoom();
+        let _user = JSON.parse(sessionStorage.getItem("user"));
+        if (_user.type.toLowerCase() === "interviewer") {
+          Startup.Binders.placeProblemCreateForm();
+          return;
+        }
+      });
+      user = JSON.parse(sessionStorage.getItem("user"));
 
-            $("<small>").text(
-              `${solution.lang} by ${solution.author} at ${solution.time}`
-            ),
-            $("<button>")
-              .text("Run")
-              .attr("class", "btn btn-success btn-sm float-right")
-              .click(event => {
-                runCodeScript(solution.lang, solution.code);
-              })
-          );
-
-        $(`#solutions-${problemId}`).append(preview);
-        highlightCode();
+      var DOM = {
+        Conversation: {},
+        Problem: {},
+        Peoples: {}
       };
 
-      const problemSolutionHandler = problem => {
+      var Handlers = {
+        Problem: {}
+      };
+
+      var Builders = {
+        Form: {}
+      };
+
+      let API = {};
+
+      var socket = io.connect("/room");
+      if (socket === null) {
+        alert("connection error");
+        window.location.replace("/");
+      }
+
+      const ChatEntry = "chat entry";
+      const NewMessage = "message";
+      const Disconnect = "disconnect";
+      const PreviousMessages = "previous messages";
+      const ActiveUsers = "active users";
+      const PinnedProblems = "pinned problems";
+      const AddProblem = "add problem";
+      const AddSolution = "add solution";
+      const UpdateProblem = "update problem";
+
+      socket.emit(ChatEntry, user);
+
+      // load from API
+      socket.on(PreviousMessages, arr => {
+        arr.forEach(msg => {
+          DOM.Conversation.message(msg);
+        });
+        scrollToTop("#message-list");
+      });
+
+      socket.on(NewMessage, msg => {
+        DOM.Conversation.message(msg);
+        scrollToTop("#message-list");
+      });
+
+      socket.on(Disconnect, () => {
+        alert("you are disconnected");
+        window.location.replace("/");
+      });
+
+      socket.on(ActiveUsers, users => {
+        $("#active-user-list").empty();
+        users.forEach(user => {
+          DOM.Peoples.active(user);
+        });
+      });
+
+      // receive new problem
+      socket.on(AddProblem, msg => {
+        DOM.Problem.create(msg);
+      });
+
+      // receive a new solution of a problem
+      socket.on(AddSolution, msg => {
+        DOM.Problem.solution(msg.problemId, msg.solution);
+      });
+
+      socket.on(PinnedProblems, arr => {
+        arr.forEach(problem => {
+          DOM.Problem.create(problem);
+          if (problem.solutions.length > 0) {
+            problem.solutions.forEach(solution => {
+              DOM.Problem.solution(problem.id, solution);
+            });
+          }
+        });
+      });
+
+      socket.on(UpdateProblem, msg => {
+        DOM.Problem.update(msg);
+      });
+    </script>
+
+    <!-- Startup loader and binder binders -->
+    <script>
+      Startup.Loaders.log = () => {
+        if (sessionStorage.getItem("user") === null) {
+          alert("you are not logged in");
+          window.location.replace("/");
+        }
+      };
+
+      Startup.Binders.onWriteMessage = () => {
+        $("#conversation-form").submit(e => {
+          e.preventDefault();
+          let message = {
+            username: user.name,
+            body: $("#input-message").val(),
+            time: new Date().toLocaleString()
+          };
+          socket.emit(NewMessage, message);
+          $("#input-message").val("");
+          return false;
+        });
+      };
+
+      Startup.Binders.onLeaveRoom = () => {
+        $("#leave-chat").on("click", event => {
+          sessionStorage.clear();
+          try {
+            socket.disconnect();
+          } catch (err) {
+            window.location.replace("/");
+          }
+        });
+      };
+
+      Startup.Binders.placeProblemCreateForm = () => {
+        $("#problem-list").append(
+          $("<form>")
+            .attr("id", "add-problem-form")
+            .attr("action", "")
+            .submit(event => Handlers.Problem.create(event))
+            .append(
+              $("<input>")
+                .attr("id", "input-new-problem")
+                .attr("type", "text")
+                .attr("class", "form-control")
+                .attr("placeholder", "Your Problem"),
+              $("<button>")
+                .attr("class", "btn btn-success")
+                .text("Add Problem")
+            )
+        );
+      };
+    </script>
+
+    <!-- Handler -->
+    <script>
+      Handlers.Problem.create = event => {
+        event.preventDefault();
+        let question = $("#input-new-problem").val();
+        question = question.trim();
+        if (question === "") {
+          alert("You should type any statement");
+          return;
+        }
+
+        let problem = {
+          id: generateRandomString(),
+          question: question,
+          time: new Date().toLocaleString(),
+          author: user.name,
+          solutions: []
+        };
+
+        // broadcast this problem
+        socket.emit(AddProblem, problem);
+
+        $("#input-new-problem").val("");
+      };
+
+      Handlers.Problem.update = (event, problem) => {
+        event.preventDefault();
+        let updatedQuestion = prompt("Update", problem.question);
+        if (updatedQuestion !== null) {
+          problem.question = updatedQuestion;
+          socket.emit(UpdateProblem, problem);
+          alert("Updated");
+        }
+      };
+
+      Handlers.Problem.solution = (event, problem) => {
         event.preventDefault();
         let code = $(`#${problem.id}-solution-code`).val();
         if (code === "") {
           alert("You must give a piece of code");
           return;
         }
+        code = code.trim();
         let lang = $(`#${problem.id}-solution-lang`).val();
         $(`#${problem.id}-solution-code`).val("");
 
@@ -292,11 +319,14 @@
         };
         socket.emit(AddSolution, { problemId: problem.id, solution });
       };
+    </script>
 
-      const buildSolutionFormOn = problem => {
+    <!-- Component Builders Builders -->
+    <script>
+      Builders.Form.solution = problem => {
         return $("<form>")
           .attr("id", `${problem.id}-solution-form`)
-          .submit(event => problemSolutionHandler(problem))
+          .submit(event => Handlers.Problem.solution(event, problem))
           .append(
             $("<textarea>")
               .attr("style", "width:100%;")
@@ -322,7 +352,52 @@
           );
       };
 
-      const addNewProblemInDOM = problem => {
+      Builders.Form.problem = () => {
+        return $("#problem-list").append(
+          $("<form>")
+            .attr("id", "add-problem-form")
+            .attr("action", "")
+            .submit(event => Handlers.Problem.create(event))
+            .append(
+              $("<input>")
+                .attr("id", "input-new-problem")
+                .attr("type", "text")
+                .attr("class", "form-control")
+                .attr("placeholder", "Your Problem"),
+              $("<button>")
+                .attr("class", "btn btn-success")
+                .text("Add Problem")
+            )
+        );
+      };
+    </script>
+
+    <!-- HTML DOM  -->
+    <!-- 
+    
+    ID pattern:
+    
+    problem-list
+    problem-id-${id}
+    solutions-${problem_id}
+    solution-${solution_id}-${problem_id}
+     -->
+    <script>
+      DOM.Conversation.message = msg => {
+        let messageBody = msg.body.split("#").join("");
+        let fullMessage = markdown(`**${msg.username}** ${messageBody}`);
+
+        $("#message-list").append($("<li>").append($("<p>").html(fullMessage)));
+        highlightCode();
+      };
+
+      DOM.Peoples.active = user => {
+        $("#active-user-list").append(
+          $("<li>").append(user.name, $("<br>"), $("<span>").text(user.type))
+        );
+      };
+
+      DOM.Problem.create = problem => {
         let card = $("<div>");
 
         let header = $("<div>")
@@ -343,12 +418,12 @@
               .attr("class", "btn btn-sm btn-primary ml-2")
               .text("edit")
               .click(event => {
-                problemUpdateHandler(problem, event);
+                Handlers.Problem.update(event, problem);
               })
           );
         }
 
-        let solutionForm = buildSolutionFormOn(problem);
+        let solutionForm = Builders.Form.solution(problem);
 
         let body = $("<div>")
           .attr("id", `${problem.id}`)
@@ -368,58 +443,43 @@
         $("#problem-list").prepend(card);
       };
 
-      const problemUpdateHandler = (problem, event) => {
-        event.preventDefault();
-        let updatedQuestion = prompt("Update", problem.question);
-        if (updatedQuestion !== null) {
-          problem.question = updatedQuestion;
-          socket.emit(UpdateProblem, problem);
-          alert("Updated");
-        }
+      DOM.Problem.solution = (problemId, solution) => {
+        let preview = $("<li>")
+          .attr("class", "list-group-item")
+          .append(
+            //Code
+            $("<pre>")
+              .attr("class", "prettyprint")
+              .append(
+                $("<code>")
+                  .text(solution.code)
+                  .attr("class", `language-${solution.lang}`)
+                  .bind("mouseup", event => {
+                    console.log(window.getSelection());
+                  })
+              ),
+            // Meta
+            $("<small>").text(
+              `${solution.lang} by ${solution.author} at ${solution.time}`
+            ),
+            // Executor
+            $("<button>")
+              .text("Run")
+              .attr("class", "btn btn-success btn-sm float-right")
+              .click(event => {
+                runCodeScript(solution.lang, solution.code);
+              })
+          );
+
+        $(`#solutions-${problemId}`).append(preview);
+        highlightCode();
       };
 
-      const createProblemHandler = event => {
-        event.preventDefault();
-        let question = $("#input-new-problem").val();
-        question = question.trim();
-        if (question === "") {
-          alert("You should type any statement");
-          return;
-        }
-
-        let problem = {
-          id: generateRandomString(),
-          question: question,
-          time: new Date().toLocaleString(),
-          author: user.name,
-          solutions: []
-        };
-
-        // broadcast this problem
-        socket.emit(AddProblem, problem);
-
-        $("#input-new-problem").val("");
-      };
-
-      const updateProblemInDOM = problem => {
+      DOM.Problem.update = problem => {
         $(`#problem-id-${problem.id}`).text(
           `${problem.question} - set by ${problem.author}`
         );
       };
-
-      // receive new problem
-      socket.on(AddProblem, msg => {
-        addNewProblemInDOM(msg);
-      });
-
-      // receive a new solution of a problem
-      socket.on(AddSolution, msg => {
-        addSolutionInDOM(msg.problemId, msg.solution);
-      });
-
-      socket.on(UpdateProblem, msg => {
-        updateProblemInDOM(msg);
-      });
     </script>
   </body>
 </html>
