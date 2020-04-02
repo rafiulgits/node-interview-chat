@@ -95,6 +95,7 @@ class ProblemDB {
             author: "username",
             time: new Date().toLocaleString(),
             code: "code string",
+            sampleTestCases = object or array of object
             language: "js"
           }
         ]
