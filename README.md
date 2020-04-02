@@ -6,6 +6,12 @@ This Project is designed for taking interview online in an interactive way. Inte
 
 
 
+![](https://i.ibb.co/Sx0x031/node-chat-app.png)
+
+
+
+***
+
 ## System
 
 **Server and User Interface**
