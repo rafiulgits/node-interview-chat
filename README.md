@@ -81,7 +81,7 @@ To set a problem an interviewer just fill up the question box. If interviewer do
 
   ```json
   {
-      "input" : [10, 20, 5, - 10, 100, 59],
+      "input" : [10, 20, 5, -10, 100, 59],
       "output" : 100
   }
   ```
