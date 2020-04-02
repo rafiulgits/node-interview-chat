@@ -81,27 +81,39 @@
         }
       };
 
-      const runCodeScript = (lang, code) => {
-        try {
-          if (lang.toLowerCase() === "javascript") {
-            alert(eval(code));
-            return;
-          } else if (lang.toLowerCase() === "python") {
-            let body = JSON.stringify({ code: code });
-            axios
-              .post("http://localhost:3000/runtime/py", body, {
-                headers: { "Content-Type": "application/json" }
-              })
-              .then(res => {
-                alert(res.data.result);
-              })
-              .catch(err => {
-                alert("runtime error");
-              });
-          }
-        } catch (err) {
-          alert("runtime error");
+      const runCodeScript = (lang, code, problemId) => {
+        var url = "http://localhost:3000/runtime";
+        if (lang.toLowerCase() === "javascript") {
+          url = url + "/js/";
+        } else if (lang.toLowerCase() === "python") {
+          url = url + "/py/";
+        } else {
+          return;
         }
+        let body = JSON.stringify({ code: code, problemId: problemId });
+        let config = {
+          headers: { "Content-Type": "application/json" }
+        };
+        axios
+          .post(url, body, config)
+          .then(res => {
+            if (res.data.result.status === undefined) {
+              alert(res.data.result);
+              return;
+            }
+            let data = res.data.result;
+            alert(
+              "Actual: " +
+                data.actual +
+                "\nFound: " +
+                data.found +
+                "\nStatus: " +
+                data.status
+            );
+          })
+          .catch(err => {
+            alert("Runtime Error");
+          });
       };
 
       const onCodeLineSelect = event => {
@@ -391,14 +403,24 @@
           $("<tr>").append($("<th>").text("Input"), $("<th>").text("Output"))
         );
         var tableBody = $("<tbody>");
-        sampleTestCases.forEach(item => {
+        if (!Array.isArray(sampleTestCases)) {
           tableBody.append(
             $("<tr>").append(
-              $("<td>").text(item.input),
-              $("<td>").text(item.output)
+              $("<td>").text(sampleTestCases.input),
+              $("<td>").text(sampleTestCases.output)
             )
           );
-        });
+        } else {
+          sampleTestCases.forEach(item => {
+            tableBody.append(
+              $("<tr>").append(
+                $("<td>").text(item.input),
+                $("<td>").text(item.output)
+              )
+            );
+          });
+        }
+
         return $("<table>")
           .addClass("table")
           .append(tableHead, tableBody);
@@ -506,7 +528,7 @@
               .text("Run")
               .attr("class", "btn btn-success btn-sm float-right")
               .click(event => {
-                runCodeScript(solution.lang, solution.code);
+                runCodeScript(solution.lang, solution.code, problemId);
               })
           );
 

@@ -2,10 +2,10 @@ import express from "express";
 import socketio from "socket.io";
 import path from "path";
 import http from "http";
-import { Users } from "./src/core/db";
+import { Users, Problems } from "./src/core/db";
 import Chat from "./src/core/chat";
 import BodyParser from "body-parser";
-import { PythonShell } from "python-shell";
+import { runPython, runJavaScript } from "./src/core/runner";
 
 var app = express();
 app.use(BodyParser.json());
@@ -39,7 +39,31 @@ app.get("/static/:file", (req, res) => {
 
 app.post("/runtime/py", (req, res) => {
   let code = req.body.code;
-  PythonShell.runString(code, null, (err, result) => {
+  let problemId = req.body.problemId;
+  var sampleCases = Problems.get(problemId).sampleTestCases;
+  if (sampleCases === undefined) {
+    sampleCases = null;
+  }
+  runPython(code, sampleCases, (err, result) => {
+    if (err) {
+      res.writeHead(400, {});
+      res.write("runtime error");
+      return res.end();
+    }
+    res.writeHead(200, {});
+    res.write(JSON.stringify({ result: result }));
+    return res.end();
+  });
+});
+
+app.post("/runtime/js", (req, res) => {
+  let code = req.body.code;
+  let problemId = req.body.problemId;
+  var sampleCases = Problems.get(problemId).sampleTestCases;
+  if (sampleCases === undefined) {
+    sampleCases = null;
+  }
+  runJavaScript(code, sampleCases, (err, result) => {
     if (err) {
       res.writeHead(400, {});
       res.write("runtime error");

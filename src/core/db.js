@@ -89,13 +89,13 @@ class ProblemDB {
         question: "find second max of an array",
         author: "username",
         time: new Date().toLocaleString(),
+        sampleTestCases = object or array of object
         solutions: [
           {
             problemId : "from problem"
             author: "username",
             time: new Date().toLocaleString(),
             code: "code string",
-            sampleTestCases = object or array of object
             language: "js"
           }
         ]

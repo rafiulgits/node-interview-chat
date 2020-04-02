@@ -112,7 +112,7 @@ const runPythonWithSampleCases = (code, sampleCases, callback) => {
     };
     PythonShell.runString(sourceCode, options, (err, result) => {
       if (err) {
-        callback(err);
+        callback(err, null);
       } else {
         results.push(result[0]);
       }
