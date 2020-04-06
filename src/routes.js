@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { runJavaScript, runPython } from "./core/runner";
-import { Problems } from "./core/db";
+import { Users, Problems } from "./core/db";
 import path from "path";
 
 let routes = Router();
@@ -63,5 +63,56 @@ routes.post("/runtime/js", (req, res) => {
     return res.end();
   });
 });
+
+routes.post("/login", (req, res) => {
+  if (Users.legth() === 0) {
+    addServerItself();
+  }
+  var user = req.body;
+  if (user === null) {
+    res.writeHead(400, {});
+    res.write("no body");
+    return res.end();
+  }
+
+  if (Users.get(user.name) !== null) {
+    res.writeHead(400, {});
+    res.write("a user already exists with this name");
+    return res.end();
+  }
+
+  if (Users.isOnlyServerExists()) {
+    if (user.type.toLowerCase() === "candidate") {
+      res.writeHead(400, {});
+      res.write("only an interviewer can create a room conversation");
+      return res.end();
+    } else if (user.type.toLowerCase() === "interviewer") {
+      user.type = "Creator";
+      user.time = new Date().toLocaleDateString();
+      Users.add(user);
+      res.writeHead(200, {});
+      res.write(JSON.stringify(user));
+      return res.end();
+    } else {
+      res.writeHead(400, {});
+      res.write("");
+      return res.end();
+    }
+  }
+  user.time = new Date().toLocaleDateString();
+  Users.add(user);
+  res.writeHead(200, {});
+  res.write(JSON.stringify(user));
+  return res.end();
+});
+
+const addServerItself = () => {
+  Users.add({
+    id: "server",
+    name: "server",
+    type: "server",
+    time: new Date().toLocaleDateString(),
+  });
+};
 
 export default routes;

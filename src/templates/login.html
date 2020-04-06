@@ -32,17 +32,15 @@
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.0/jquery.min.js"></script>
-    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.19.2/axios.min.js"></script>
     <script>
       $(() => {
-        var socket = io();
-
-        $("form").submit(event => {
+        $("form").submit((event) => {
           event.preventDefault();
           handleFormSubmit(event);
         });
 
-        let handleFormSubmit = event => {
+        let handleFormSubmit = (event) => {
           let userName = $("#input-user-name").val();
           let userType = $("#select-user-type").val();
           if (userName.trim() === "") {
@@ -51,31 +49,32 @@
           }
           let requestBody = {
             name: userName,
-            type: userType
+            type: userType,
           };
-          socket.emit("login request", requestBody);
+          loginRequest(requestBody);
         };
-
-        /*
-          response message object:
-          {
-            code : 200/400,
-            user : {
-              id : Client ID,
-              name : user name,
-              type : candidate/interviewer
-            }
-          }
-        */
-        socket.on("login response", msg => {
-          if (msg.code === 400) {
-            alert("A user already exists with this name");
-            return;
-          }
-          sessionStorage.setItem("user", JSON.stringify(msg.user));
-          window.location.replace("/room");
-        });
       });
+
+      const loginRequest = (data) => {
+        let body = JSON.stringify({ data: data });
+        let config = { headers: { "Content-Type": "application/json" } };
+        axios
+          .post("/login", data, config)
+          .then((res) => {
+            sessionStorage.setItem("user", JSON.stringify(res.data));
+            window.location.replace("/room");
+          })
+          .catch((err) => {
+            console.log(err);
+            if (err.response) {
+              alert(err.response.data);
+              console.log(err.response);
+            } else {
+              console.log(err);
+              alert("request failed");
+            }
+          });
+      };
     </script>
   </body>
 </html>

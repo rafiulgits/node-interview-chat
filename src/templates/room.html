@@ -145,7 +145,7 @@
         Startup.Binders.onWriteMessage();
         Startup.Binders.onLeaveRoom();
         let _user = JSON.parse(sessionStorage.getItem("user"));
-        if (_user.type.toLowerCase() === "creator") {
+        if (_user.type === "Creator") {
           Startup.Binders.placeProblemCreateForm();
           return;
         }
