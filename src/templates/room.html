@@ -27,7 +27,7 @@
     </div>
 
     <div class="block middle-block">
-      <h4 style="text-align:center">Conversations</h4>
+      <h4 style="text-align: center;">Conversations</h4>
 
       <ul id="message-list" style="padding: 5px;"></ul>
 
@@ -57,7 +57,7 @@
 
     <!-- static functions -->
     <script>
-      const scrollToTop = element => {
+      const scrollToTop = (element) => {
         $(element).animate({ scrollTop: $(element)[0].scrollHeight }, 1000);
       };
 
@@ -92,11 +92,11 @@
         }
         let body = JSON.stringify({ code: code, problemId: problemId });
         let config = {
-          headers: { "Content-Type": "application/json" }
+          headers: { "Content-Type": "application/json" },
         };
         axios
           .post(url, body, config)
-          .then(res => {
+          .then((res) => {
             if (res.data.result.status === undefined) {
               alert(res.data.result);
               return;
@@ -111,12 +111,12 @@
                 data.status
             );
           })
-          .catch(err => {
+          .catch((err) => {
             alert("Runtime Error");
           });
       };
 
-      const onCodeLineSelect = event => {
+      const onCodeLineSelect = (event) => {
         try {
           let code = event.target.getAttribute("codeline");
           if (code !== "") {
@@ -134,7 +134,7 @@
       var Startup = {
         isLoaded: false,
         Loaders: {},
-        Binders: {}
+        Binders: {},
       };
       var user;
       $(() => {
@@ -145,7 +145,7 @@
         Startup.Binders.onWriteMessage();
         Startup.Binders.onLeaveRoom();
         let _user = JSON.parse(sessionStorage.getItem("user"));
-        if (_user.type.toLowerCase() === "interviewer") {
+        if (_user.type.toLowerCase() === "creator") {
           Startup.Binders.placeProblemCreateForm();
           return;
         }
@@ -155,16 +155,16 @@
       var DOM = {
         Conversation: {},
         Problem: {},
-        Peoples: {}
+        Peoples: {},
       };
 
       var Handlers = {
-        Problem: {}
+        Problem: {},
       };
 
       var Builders = {
         Form: {},
-        Block: {}
+        Block: {},
       };
 
       let API = {};
@@ -188,14 +188,14 @@
       socket.emit(ChatEntry, user);
 
       // load from API
-      socket.on(PreviousMessages, arr => {
-        arr.forEach(msg => {
+      socket.on(PreviousMessages, (arr) => {
+        arr.forEach((msg) => {
           DOM.Conversation.message(msg);
         });
         scrollToTop("#message-list");
       });
 
-      socket.on(NewMessage, msg => {
+      socket.on(NewMessage, (msg) => {
         DOM.Conversation.message(msg);
         scrollToTop("#message-list");
       });
@@ -205,35 +205,35 @@
         window.location.replace("/");
       });
 
-      socket.on(ActiveUsers, users => {
+      socket.on(ActiveUsers, (users) => {
         $("#active-user-list").empty();
-        users.forEach(user => {
+        users.forEach((user) => {
           DOM.Peoples.active(user);
         });
       });
 
       // receive new problem
-      socket.on(AddProblem, msg => {
+      socket.on(AddProblem, (msg) => {
         DOM.Problem.create(msg);
       });
 
       // receive a new solution of a problem
-      socket.on(AddSolution, msg => {
+      socket.on(AddSolution, (msg) => {
         DOM.Problem.solution(msg.problemId, msg.solution);
       });
 
-      socket.on(PinnedProblems, arr => {
-        arr.forEach(problem => {
+      socket.on(PinnedProblems, (arr) => {
+        arr.forEach((problem) => {
           DOM.Problem.create(problem);
           if (problem.solutions.length > 0) {
-            problem.solutions.forEach(solution => {
+            problem.solutions.forEach((solution) => {
               DOM.Problem.solution(problem.id, solution);
             });
           }
         });
       });
 
-      socket.on(UpdateProblem, msg => {
+      socket.on(UpdateProblem, (msg) => {
         DOM.Problem.update(msg);
       });
     </script>
@@ -248,12 +248,16 @@
       };
 
       Startup.Binders.onWriteMessage = () => {
-        $("#conversation-form").submit(e => {
+        $("#conversation-form").submit((e) => {
           e.preventDefault();
+          let value = $("#input-message").val();
+          if (value === "") {
+            return;
+          }
           let message = {
             username: user.name,
-            body: $("#input-message").val(),
-            time: new Date().toLocaleString()
+            body: value,
+            time: new Date().toLocaleString(),
           };
           socket.emit(NewMessage, message);
           $("#input-message").val("");
@@ -262,7 +266,7 @@
       };
 
       Startup.Binders.onLeaveRoom = () => {
-        $("#leave-chat").on("click", event => {
+        $("#leave-chat").on("click", (event) => {
           sessionStorage.clear();
           try {
             socket.disconnect();
@@ -277,7 +281,7 @@
           $("<form>")
             .attr("id", "add-problem-form")
             .attr("action", "")
-            .submit(event => Handlers.Problem.create(event))
+            .submit((event) => Handlers.Problem.create(event))
             .append(
               $("<input>")
                 .attr("id", "input-new-problem")
@@ -298,7 +302,7 @@
 
     <!-- Handler -->
     <script>
-      Handlers.Problem.create = event => {
+      Handlers.Problem.create = (event) => {
         event.preventDefault();
         let question = $("#input-new-problem").val();
         question = question.trim();
@@ -323,7 +327,7 @@
           time: new Date().toLocaleString(),
           sampleTestCases: sampleTestCases,
           author: user.name,
-          solutions: []
+          solutions: [],
         };
 
         // broadcast this problem
@@ -357,7 +361,7 @@
           code: code,
           lang: lang,
           author: user.name,
-          time: new Date().toLocaleString()
+          time: new Date().toLocaleString(),
         };
         socket.emit(AddSolution, { problemId: problem.id, solution });
       };
@@ -365,10 +369,10 @@
 
     <!-- Component Builders Builders -->
     <script>
-      Builders.Form.solution = problem => {
+      Builders.Form.solution = (problem) => {
         return $("<form>")
           .attr("id", `${problem.id}-solution-form`)
-          .submit(event => Handlers.Problem.solution(event, problem))
+          .submit((event) => Handlers.Problem.solution(event, problem))
           .append(
             $("<textarea>")
               .attr("style", "width:100%;")
@@ -381,21 +385,15 @@
               .attr("id", `${problem.id}-solution-lang`)
               .attr("style", "font-size:12px")
               .append(
-                $("<option>")
-                  .attr("value", "javascript")
-                  .text("JavaScript"),
-                $("<option>")
-                  .attr("value", "python")
-                  .text("Python")
+                $("<option>").attr("value", "javascript").text("JavaScript"),
+                $("<option>").attr("value", "python").text("Python")
               ),
 
-            $("<button>")
-              .attr("class", "btn btn-primary btn-sm")
-              .text("Submit")
+            $("<button>").attr("class", "btn btn-primary btn-sm").text("Submit")
           );
       };
 
-      Builders.Block.sampleCase = sampleTestCases => {
+      Builders.Block.sampleCase = (sampleTestCases) => {
         if (sampleTestCases === null) {
           return $("<b>").text("no test case");
         }
@@ -411,7 +409,7 @@
             )
           );
         } else {
-          sampleTestCases.forEach(item => {
+          sampleTestCases.forEach((item) => {
             tableBody.append(
               $("<tr>").append(
                 $("<td>").text(item.input),
@@ -421,9 +419,7 @@
           });
         }
 
-        return $("<table>")
-          .addClass("table")
-          .append(tableHead, tableBody);
+        return $("<table>").addClass("table").append(tableHead, tableBody);
       };
     </script>
 
@@ -438,7 +434,7 @@
     solution-${solution_id}-${problem_id}
      -->
     <script>
-      DOM.Conversation.message = msg => {
+      DOM.Conversation.message = (msg) => {
         let messageBody = msg.body.split("#").join("");
         let fullMessage = markdown(`###### ${msg.username}\n  ${messageBody}`);
 
@@ -446,13 +442,13 @@
         // highlightCode();
       };
 
-      DOM.Peoples.active = user => {
+      DOM.Peoples.active = (user) => {
         $("#active-user-list").append(
           $("<li>").append(user.name, $("<br>"), $("<span>").text(user.type))
         );
       };
 
-      DOM.Problem.create = problem => {
+      DOM.Problem.create = (problem) => {
         let card = $("<div>");
 
         let header = $("<div>")
@@ -477,7 +473,7 @@
             $("<button>")
               .attr("class", "btn btn-sm btn-primary ml-2")
               .text("edit")
-              .click(event => {
+              .click((event) => {
                 Handlers.Problem.update(event, problem);
               })
           );
@@ -527,7 +523,7 @@
             $("<button>")
               .text("Run")
               .attr("class", "btn btn-success btn-sm float-right")
-              .click(event => {
+              .click((event) => {
                 runCodeScript(solution.lang, solution.code, problemId);
               })
           );
@@ -536,7 +532,7 @@
         highlightCode();
       };
 
-      DOM.Problem.update = problem => {
+      DOM.Problem.update = (problem) => {
         $(`#problem-id-${problem.id}`).text(
           `${problem.question} - set by ${problem.author}`
         );

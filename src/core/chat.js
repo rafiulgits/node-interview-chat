@@ -19,23 +19,23 @@ class Chat {
 
   loop() {
     // socket event loop
-    this.socket.on(ChatEntry, msg => {
+    this.socket.on(ChatEntry, (msg) => {
       this.onChatEntry(msg);
     });
 
-    this.socket.on(NewMessage, msg => {
+    this.socket.on(NewMessage, (msg) => {
       this.onMessage(msg);
     });
 
-    this.socket.on(AddProblem, msg => {
+    this.socket.on(AddProblem, (msg) => {
       this.onAddProblem(msg);
     });
 
-    this.socket.on(AddSolution, msg => {
+    this.socket.on(AddSolution, (msg) => {
       this.onAddSolution(msg);
     });
 
-    this.socket.on(UpdateProblem, msg => {
+    this.socket.on(UpdateProblem, (msg) => {
       this.onUpdateProblem(msg);
     });
 
@@ -62,7 +62,7 @@ class Chat {
     let notification = {
       username: "server",
       body: `${this.user.name} joined as ${this.user.type}`,
-      time: new Date().toLocaleString()
+      time: new Date().toLocaleString(),
     };
     Messages.add(notification);
     io.of(Room).emit(NewMessage, notification);
@@ -94,10 +94,16 @@ class Chat {
       let notification = {
         username: "server",
         time: new Date().toLocaleString(),
-        body: `${this.user.type} ${this.user.name} leave`
+        body: `${this.user.type} ${this.user.name} leave`,
       };
       Users.remove(this.user);
       Messages.add(notification);
+      if (Users.isOnlyServerExists()) {
+        this.clearDataBase();
+        console.log("chat room is closing...");
+        io.of(Room).emit(Disconnect);
+        return;
+      }
       io.of(Room).emit(NewMessage, notification);
       io.of(Room).emit(ActiveUsers, Users.getAll());
       console.log("disconnected client : " + this.user.id);
@@ -105,6 +111,12 @@ class Chat {
     try {
       this.dismiss();
     } catch (err) {}
+  }
+
+  clearDataBase() {
+    Users.clear();
+    Messages.clear();
+    Problems.clear();
   }
 
   dismiss() {

@@ -4,6 +4,7 @@ class UserDB {
     {
       id : socket id
       name : username
+      type : interviewer/candidate/creator
       time : entry time
     }
 
@@ -13,7 +14,7 @@ class UserDB {
   }
 
   get(name) {
-    let result = this._array.find(user => {
+    let result = this._array.find((user) => {
       return user.name === name;
     });
     if (typeof result === "undefined") {
@@ -23,7 +24,7 @@ class UserDB {
   }
 
   getById(id) {
-    let result = this._array.find(user => {
+    let result = this._array.find((user) => {
       return user.id === id;
     });
     if (typeof result === "undefined") {
@@ -56,6 +57,14 @@ class UserDB {
   clear() {
     this._array = [];
   }
+
+  legth() {
+    return this._array.length;
+  }
+
+  isOnlyServerExists() {
+    return this._array.length <= 1;
+  }
 }
 
 class MessageDB {
@@ -79,6 +88,10 @@ class MessageDB {
 
   getAll() {
     return this._array;
+  }
+
+  clear() {
+    this._array = [];
   }
 }
 
@@ -110,7 +123,7 @@ class ProblemDB {
   }
 
   get(id) {
-    let result = this._array.find(problem => {
+    let result = this._array.find((problem) => {
       return problem.id === id;
     });
     if (typeof result === "undefined") {
@@ -120,7 +133,7 @@ class ProblemDB {
   }
 
   update(instance) {
-    let index = this._array.findIndex(problem => {
+    let index = this._array.findIndex((problem) => {
       return problem.id === instance.id;
     });
     if (index === -1) {
@@ -131,7 +144,7 @@ class ProblemDB {
   }
 
   addSolutionOn(id, solutionInstance) {
-    let index = this._array.findIndex(problem => {
+    let index = this._array.findIndex((problem) => {
       return problem.id === id;
     });
     if (index === -1) {
@@ -143,6 +156,10 @@ class ProblemDB {
 
   getAll() {
     return this._array;
+  }
+
+  clear() {
+    this._array = [];
   }
 }
 

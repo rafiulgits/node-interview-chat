@@ -1,85 +1,29 @@
 import express from "express";
 import socketio from "socket.io";
-import path from "path";
 import http from "http";
-import { Users, Problems } from "./src/core/db";
+import { Users } from "./src/core/db";
 import Chat from "./src/core/chat";
 import BodyParser from "body-parser";
-import { runPython, runJavaScript } from "./src/core/runner";
+import routes from "./src/routes";
 
-var app = express();
+let app = express();
 app.use(BodyParser.json());
+app.use("/", routes);
 
-export var server = http.createServer(app);
+let server = http.createServer(app);
+
 export var io = new socketio(server);
 export const Room = "room";
 
 const Connection = "connection";
 
-const getTemplate = name => {
-  return path.join(__dirname, `src/templates/${name}.html`);
-};
-
-const getStaticFile = file => {
-  return path.join(__dirname, `src/static/${file}`);
-};
-
-app.get("/", (req, res) => {
-  res.sendFile(getTemplate("login"));
-});
-
-app.get("/room", (req, res) => {
-  res.sendFile(getTemplate("room"));
-});
-
-app.get("/static/:file", (req, res) => {
-  let file = req.params.file;
-  res.sendFile(getStaticFile(file));
-});
-
-app.post("/runtime/py", (req, res) => {
-  let code = req.body.code;
-  let problemId = req.body.problemId;
-  var sampleCases = Problems.get(problemId).sampleTestCases;
-  if (sampleCases === undefined) {
-    sampleCases = null;
-  }
-  runPython(code, sampleCases, (err, result) => {
-    if (err) {
-      res.writeHead(400, {});
-      res.write("runtime error");
-      return res.end();
-    }
-    res.writeHead(200, {});
-    res.write(JSON.stringify({ result: result }));
-    return res.end();
-  });
-});
-
-app.post("/runtime/js", (req, res) => {
-  let code = req.body.code;
-  let problemId = req.body.problemId;
-  var sampleCases = Problems.get(problemId).sampleTestCases;
-  if (sampleCases === undefined) {
-    sampleCases = null;
-  }
-  runJavaScript(code, sampleCases, (err, result) => {
-    if (err) {
-      res.writeHead(400, {});
-      res.write("runtime error");
-      return res.end();
-    }
-    res.writeHead(200, {});
-    res.write(JSON.stringify({ result: result }));
-    return res.end();
-  });
-});
+// insert server itself as a user
 
 const handleLoginRequest = (socket, msg) => {
   if (Users.get(msg.name) !== null) {
     let response = {
       code: 400,
-      user: null
+      user: null,
     };
     socket.emit("login response", response);
     return;
@@ -89,7 +33,7 @@ const handleLoginRequest = (socket, msg) => {
     Users.add(user);
     let response = {
       code: 200,
-      user: user
+      user: user,
     };
     socket.emit("login response", response);
     return;
@@ -97,14 +41,14 @@ const handleLoginRequest = (socket, msg) => {
 };
 
 // manage login
-io.on(Connection, socket => {
-  socket.on("login request", msg => {
+io.on(Connection, (socket) => {
+  socket.on("login request", (msg) => {
     handleLoginRequest(socket, msg);
   });
 });
 
 // manage chatroom entry
-io.of(Room).on(Connection, socket => {
+io.of(Room).on(Connection, (socket) => {
   let chat = new Chat(socket);
   chat.loop();
 });
