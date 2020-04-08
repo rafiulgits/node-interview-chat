@@ -65,44 +65,65 @@ routes.post("/runtime/js", (req, res) => {
 });
 
 routes.post("/login", (req, res) => {
+  var requestedUser = req.body;
+  if (requestedUser === null) {
+    res.writeHead(400, {});
+    res.write("no request body");
+    return res.end();
+  }
+  var user = Users.get(requestedUser.name);
+  if (user === null) {
+    res.writeHead(401, {});
+    res.write("invalid user name");
+    return res.end();
+  }
+  if (user.password !== requestedUser.password) {
+    res.writeHead(401, {});
+    res.write("incorrect password");
+    return res.end();
+  }
+  user.active = true;
+  Users.update(user);
+  res.writeHead(200, {});
+  res.write(JSON.stringify(user));
+  return res.end();
+});
+
+routes.post("/entry", (req, res) => {
   if (Users.legth() === 0) {
     addServerItself();
   }
-  var user = req.body;
-  if (user === null) {
+  var requestedUser = req.body;
+  if (requestedUser === null) {
     res.writeHead(400, {});
-    res.write("no body");
+    res.write("no request body");
     return res.end();
   }
-
-  if (Users.get(user.name) !== null) {
+  if (Users.get(requestedUser.name)) {
     res.writeHead(400, {});
-    res.write("a user already exists with this name");
+    res.write("a user already exists with that name");
     return res.end();
   }
-
   if (Users.isOnlyServerExists()) {
-    if (user.type.toLowerCase() === "candidate") {
-      res.writeHead(400, {});
-      res.write("only an interviewer can create a room conversation");
-      return res.end();
-    } else if (user.type.toLowerCase() === "interviewer") {
-      user.type = "Creator";
-      user.time = new Date().toLocaleDateString();
-      Users.add(user);
-      res.writeHead(200, {});
-      res.write(JSON.stringify(user));
+    if (requestedUser.type.toLowerCase() === "candidate") {
+      res.writeHead(403, {});
+      res.write("only an interviewer can create a meeting room");
       return res.end();
     } else {
-      res.writeHead(400, {});
-      res.write("");
+      requestedUser.type = "Creator";
+      requestedUser.time = new Date().toLocaleString();
+      requestedUser.active = true;
+      Users.add(requestedUser);
+      res.writeHead(200, {});
+      res.write(JSON.stringify(requestedUser));
       return res.end();
     }
   }
-  user.time = new Date().toLocaleDateString();
-  Users.add(user);
+  requestedUser.time = new Date().toLocaleString();
+  requestedUser.active = true;
+  Users.add(requestedUser);
   res.writeHead(200, {});
-  res.write(JSON.stringify(user));
+  res.write(JSON.stringify(requestedUser));
   return res.end();
 });
 

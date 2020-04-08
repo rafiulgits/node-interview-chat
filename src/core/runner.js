@@ -13,7 +13,7 @@ const caseParser = (data, key) => {
   if (Array.isArray(data)) {
     // multiple
     let inputs = [];
-    data.forEach(item => {
+    data.forEach((item) => {
       inputs.push(item[key]);
     });
     return inputs;
@@ -56,7 +56,7 @@ const outputParser = (actual, found) => {
     return {
       status: CODE_WRONG,
       found: found,
-      actual: actual
+      actual: actual,
     };
   }
   var parsedOutput = [];
@@ -73,7 +73,7 @@ const outputParser = (actual, found) => {
   return {
     status: isWrong ? CODE_WRONG : CODE_ACCEPT,
     found: parsedOutput,
-    actual: actual
+    actual: actual,
   };
 };
 
@@ -101,40 +101,50 @@ const runPythonScriptOnly = (code, callback) => {
 };
 
 const runPythonWithSampleCases = (code, sampleCases, callback) => {
-  let sourceCode = pythonSourceCodeBuilder(code);
   let totalInputs = caseParser(sampleCases, CASE_INPUT);
-  let results = [];
-  for (var i = 0; i < totalInputs.length; i++) {
-    let options = {
-      args: totalInputs[i],
-      index: i,
-      length: totalInputs.length - 1
-    };
-    PythonShell.runString(sourceCode, options, (err, result) => {
-      if (err) {
-        callback(err, null);
-      } else {
-        results.push(result[0]);
+  let sourceCode = pythonSourceCodeBuilder(code, totalInputs);
+
+  PythonShell.runString(sourceCode, null, (err, result) => {
+    if (err) {
+      console.log(err);
+      callback(err, null);
+    } else {
+      let actual = caseParser(sampleCases, CASE_OUTPUT);
+      console.log(result);
+      var found = "N/A";
+      if (result.length > 0) {
+        try {
+          found = JSON.parse(result);
+        } catch (err) {}
       }
-      if (options.index === options.length) {
-        let actual = caseParser(sampleCases, CASE_OUTPUT);
-        callbackWithOutputValidation(actual, results, callback);
-      }
-    });
-  }
+      callbackWithOutputValidation(actual, found, callback);
+    }
+  });
 };
 
-const pythonSourceCodeBuilder = userCode => {
+const pythonSourceCodeBuilder = (userCode, inputs) => {
   /*
-      import sys
-     args = sys.argv[1:]
-     ${this.code}
-     __result = main(args)
-     print(__result)
-     */
-  let sourceCode = "import sys\nargs = sys.argv[1:]\n";
-  sourceCode += userCode;
-  sourceCode += "\n__result = main(args)\nprint(__result)";
+  __results__ = []
+  __inputs__ = []
+
+  def main(arg):
+    pass
+
+
+  for item in __inputs__ :
+    __result__ = main(item)
+    __results__.append(__result__)
+
+  print(__results__)
+  */
+
+  let sourceCode = `__results__ = []\n__inputs__ = ${JSON.stringify(inputs)}\n`;
+  sourceCode += `${userCode}\n`;
+  sourceCode += "for item in __inputs__ :\n";
+  sourceCode += "\t__result__ = main(item)\n";
+  sourceCode += "\t__results__.append(__result__)\n";
+  sourceCode += "print(__results__)";
+  console.log(sourceCode);
   return sourceCode;
 };
 
@@ -148,9 +158,19 @@ export const runJavaScript = (code, sampleCases, callback) => {
 
 const runJsScriptOnly = (code, callback) => {
   try {
-    let result = SafeEval(code, null);
-    callback(null, result);
+    let result = SafeEval(code);
+    if (typeof result === "function") {
+      try {
+        let funcResult = result();
+        callback(null, funcResult);
+      } catch (funcError) {
+        callback(funcError, null);
+      }
+    } else {
+      callback(null, result);
+    }
   } catch (err) {
+    console.log(err);
     callback(err, null);
   }
 };
@@ -168,7 +188,7 @@ const runJsWithSampleCases = (code, sampleCases, callback) => {
   }
 };
 
-const jsSourceCodeBuilder = userCode => {
+const jsSourceCodeBuilder = (userCode) => {
   return `
       function __main__(){
           var __results = [];

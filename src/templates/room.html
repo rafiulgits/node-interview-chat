@@ -18,7 +18,7 @@
   <body>
     <div class="block left-block">
       <h4 class="text-center">Active Users</h4>
-      <div class="d-flex justify-content-center">
+      <div class="d-flex justify-content-center" id="room-actions">
         <button class="btn btn-sm btn-danger m-2" id="leave-chat">
           Leave Chat
         </button>
@@ -147,6 +147,7 @@
         let _user = JSON.parse(sessionStorage.getItem("user"));
         if (_user.type === "Creator") {
           Startup.Binders.placeProblemCreateForm();
+          Startup.Binders.placeRoomDismissButton();
           return;
         }
       });
@@ -184,6 +185,7 @@
       const AddProblem = "add problem";
       const AddSolution = "add solution";
       const UpdateProblem = "update problem";
+      const RoomDismiss = "room dismiss";
 
       socket.emit(ChatEntry, user);
 
@@ -266,6 +268,7 @@
       };
 
       Startup.Binders.onLeaveRoom = () => {
+        $("#leave-chat").text(`${user.name} Leave`);
         $("#leave-chat").on("click", (event) => {
           sessionStorage.clear();
           try {
@@ -296,6 +299,17 @@
                 .attr("class", "btn btn-success btn-sm")
                 .text("Add Problem")
             )
+        );
+      };
+
+      Startup.Binders.placeRoomDismissButton = () => {
+        $("#room-actions").append(
+          $("<button>")
+            .addClass("btn btn-danger btn-sm m-2")
+            .text("Dismiss Room")
+            .click((event) => {
+              socket.emit(RoomDismiss, "");
+            })
         );
       };
     </script>
@@ -419,7 +433,10 @@
           });
         }
 
-        return $("<table>").addClass("table").append(tableHead, tableBody);
+        return $("<table>")
+          .addClass("table")
+          .attr("style", "font-size:13px;")
+          .append(tableHead, tableBody);
       };
     </script>
 

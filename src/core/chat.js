@@ -11,6 +11,7 @@ const AddProblem = "add problem";
 const AddSolution = "add solution";
 const PinnedProblems = "pinned problems";
 const UpdateProblem = "update problem";
+const RoomDismiss = "room dismiss";
 
 class Chat {
   constructor(socket) {
@@ -39,6 +40,10 @@ class Chat {
       this.onUpdateProblem(msg);
     });
 
+    this.socket.on(RoomDismiss, (msg) => {
+      this.onRoomDismiss();
+    });
+
     this.socket.on(Disconnect, () => {
       this.onDisconnect();
     });
@@ -48,6 +53,10 @@ class Chat {
     let user = Users.get(msg.name);
     this.user = user;
     if (user === null) {
+      this.dismiss();
+      return;
+    }
+    if (user.active === false) {
       this.dismiss();
       return;
     }
@@ -66,7 +75,7 @@ class Chat {
     };
     Messages.add(notification);
     io.of(Room).emit(NewMessage, notification);
-    io.of(Room).emit(ActiveUsers, Users.getAll());
+    io.of(Room).emit(ActiveUsers, Users.getActiveList());
   }
 
   onMessage(msg) {
@@ -96,21 +105,25 @@ class Chat {
         time: new Date().toLocaleString(),
         body: `${this.user.type} ${this.user.name} leave`,
       };
-      Users.remove(this.user);
       Messages.add(notification);
-      if (Users.isOnlyServerExists()) {
-        this.clearDataBase();
-        console.log("chat room is closing...");
-        io.of(Room).emit(Disconnect);
+      if (Users.isOnlyServerExists() || Users.isAllDeactivate()) {
+        this.onRoomDismiss();
         return;
       }
       io.of(Room).emit(NewMessage, notification);
-      io.of(Room).emit(ActiveUsers, Users.getAll());
+      io.of(Room).emit(ActiveUsers, Users.getActiveList());
       console.log("disconnected client : " + this.user.id);
     } catch (err) {}
     try {
       this.dismiss();
     } catch (err) {}
+  }
+
+  onRoomDismiss() {
+    this.clearDataBase();
+    console.log("chat room is closing...");
+    io.of(Room).emit(Disconnect);
+    return;
   }
 
   clearDataBase() {

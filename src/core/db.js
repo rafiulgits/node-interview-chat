@@ -5,7 +5,9 @@ class UserDB {
       id : socket id
       name : username
       type : interviewer/candidate/creator
-      time : entry time
+      password : string 
+      time : entry time,
+      active : true/false
     }
 
   */
@@ -37,6 +39,15 @@ class UserDB {
     return this._array;
   }
 
+  getActiveList() {
+    var result = this._array.filter((user) => {
+      if (user.active && user.name !== "server") {
+        return user;
+      }
+    });
+    return result;
+  }
+
   remove(instance) {
     let index = this._array.indexOf(instance);
     if (index > -1) {
@@ -64,6 +75,10 @@ class UserDB {
 
   isOnlyServerExists() {
     return this._array.length <= 1;
+  }
+
+  isAllDeactivate() {
+    return this.getActiveList().length === 0;
   }
 }
 

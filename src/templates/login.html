@@ -10,22 +10,39 @@
       href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.3.1/css/bootstrap.min.css"
     />
   </head>
-  <body>
+  <body class="bg-success">
+    <h1 class="display-4 text-center text-white mt-2">Meet Candidates</h1>
     <div class="container-fluid mt-5">
       <div class="d-flex justify-content-center">
-        <div class="col-sm-6">
+        <div class="col-sm-4">
           <form action="">
             <input
               placeholder="User Name"
               type="text"
-              class="form-control m-2"
+              class="form-control"
               id="input-user-name"
             />
-            <select class="form-control m-2" id="select-user-type">
+            <input
+              placeholder="Password"
+              type="password"
+              class="form-control mt-2"
+              id="input-user-password"
+            />
+            <select class="form-control mt-2" id="select-user-type">
               <option value="Interviewer">Interviewer</option>
               <option value="Candidate">Candidate</option>
             </select>
-            <button class="btn-primary m-2 btn-block">Enter</button>
+            <div class="custom-control custom-checkbox mt-2">
+              <input
+                type="checkbox"
+                class="custom-control-input"
+                id="entry-type"
+              />
+              <label class="custom-control-label text-white" for="entry-type"
+                >Already Joined</label
+              >
+            </div>
+            <button class="btn-light btn-block mt-2">Enter</button>
           </form>
         </div>
       </div>
@@ -43,23 +60,38 @@
         let handleFormSubmit = (event) => {
           let userName = $("#input-user-name").val();
           let userType = $("#select-user-type").val();
+          let userPassword = $("#input-user-password").val();
+          let entryType = $("#entry-type").is(":checked");
+          console.log(entryType);
           if (userName.trim() === "") {
             alert("You must entry a username");
+            return;
+          }
+          if (userPassword.trim() === "") {
+            alert("You must entry a password");
             return;
           }
           let requestBody = {
             name: userName,
             type: userType,
+            login: entryType,
+            password: userPassword,
           };
           loginRequest(requestBody);
         };
       });
 
       const loginRequest = (data) => {
+        let url = "";
+        if (data.login) {
+          url = url + "/login";
+        } else {
+          url = url + "/entry";
+        }
         let body = JSON.stringify({ data: data });
         let config = { headers: { "Content-Type": "application/json" } };
         axios
-          .post("/login", data, config)
+          .post(url, data, config)
           .then((res) => {
             sessionStorage.setItem("user", JSON.stringify(res.data));
             window.location.replace("/room");
