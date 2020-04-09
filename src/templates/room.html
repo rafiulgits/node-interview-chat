@@ -550,9 +550,7 @@
       };
 
       DOM.Problem.update = (problem) => {
-        $(`#problem-id-${problem.id}`).text(
-          `${problem.question} - set by ${problem.author}`
-        );
+        $(`#problem-id-${problem.id}`).text(`${problem.question}`);
       };
     </script>
   </body>
