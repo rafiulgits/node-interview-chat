@@ -45,6 +45,40 @@
       <div id="problem-list"></div>
     </div>
 
+    <!-- Problem update modal -->
+    <div
+      class="modal fade bd-example-modal-lg"
+      tabindex="-1"
+      role="dialog"
+      aria-labelledby="Problem Update"
+      aria-hidden="true"
+      id="problem-update-modal"
+    >
+      <div class="modal-dialog modal-md">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h6>Update Problem #</h6>
+            <h6 class="text-center" id="problem-update-modal-id"></h6>
+          </div>
+          <div class="modal-body">
+            <form action="" id="problem-update-modal-form">
+              <input
+                type="text"
+                class="form-control m-2"
+                style="font-size: 13px;"
+                id="problem-update-modal-question"
+              />
+              <textarea
+                id="problem-update-modal-test-cases"
+                class="form-control m-2"
+              ></textarea>
+              <button type="submit" class="btn btn-success m-2">Update</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>

@@ -32,16 +32,6 @@ Handlers.Problem.create = (event) => {
   $("#input-new-problem").val("");
 };
 
-Handlers.Problem.update = (event, problem) => {
-  event.preventDefault();
-  let updatedQuestion = prompt("Update", problem.question);
-  if (updatedQuestion !== null) {
-    problem.question = updatedQuestion;
-    socket.emit(UpdateProblem, problem);
-    alert("Updated");
-  }
-};
-
 Handlers.Problem.solution = (event, problem) => {
   event.preventDefault();
   let code = $(`#${problem.id}-solution-code`).val();

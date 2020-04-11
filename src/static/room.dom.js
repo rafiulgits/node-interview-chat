@@ -36,9 +36,15 @@ DOM.Problem.create = (problem) => {
     header.append(
       $("<button>")
         .attr("class", "btn btn-sm btn-primary ml-2")
+        .attr("data-toggle", "modal")
+        .attr("data-target", ".bd-example-modal-lg")
         .text("edit")
         .click((event) => {
-          Handlers.Problem.update(event, problem);
+          event.preventDefault();
+          $("#problem-update-modal-question").val(
+            $(`#problem-id-${problem.id}`).text()
+          );
+          $("#problem-update-modal-id").text(problem.id);
         })
     );
   }
@@ -53,7 +59,11 @@ DOM.Problem.create = (problem) => {
     .append(
       $("<div>")
         .attr("class", "card-body")
-        .append(sampleCaseBlock)
+        .append(
+          $("<div>")
+            .attr("id", `sample-cases-${problem.id}`)
+            .append(sampleCaseBlock)
+        )
         .append(
           $("<ul>")
             .attr("class", "list-group")
@@ -96,4 +106,7 @@ DOM.Problem.solution = (problemId, solution) => {
 
 DOM.Problem.update = (problem) => {
   $(`#problem-id-${problem.id}`).text(`${problem.question}`);
+  let caseTable = Builders.Block.sampleCase(problem.sampleTestCases);
+  $(`#sample-cases-${problem.id}`).empty();
+  $(`#sample-cases-${problem.id}`).append(caseTable);
 };

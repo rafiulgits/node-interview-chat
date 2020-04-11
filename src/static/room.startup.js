@@ -67,4 +67,33 @@ Startup.Binders.placeRoomDismissButton = () => {
         socket.emit(RoomDismiss, "");
       })
   );
+
+  Startup.Binders.onProblemUpdate = () => {
+    $("#problem-update-modal-form").submit((event) => {
+      event.preventDefault();
+      let question = $("#problem-update-modal-question").val();
+      let testcases = $("#problem-update-modal-test-cases").val();
+      let problemId = $("#problem-update-modal-id").text();
+      if (question === "" || problemId === "") {
+        alert("problem question and Id should not be empty");
+        return;
+      }
+      var sampleTestCases = null;
+      if (testcases !== "") {
+        try {
+          sampleTestCases = JSON.parse(testcases);
+        } catch (err) {}
+      }
+      let body = {
+        id: problemId,
+        question: question,
+        sampleTestCases: sampleTestCases,
+      };
+      socket.emit(UpdateProblem, body);
+      $("#problem-update-modal-question").val("");
+      $("#problem-update-modal-test-cases").val("");
+      $("#problem-update-modal-id").text("");
+      $("#problem-update-modal").modal("toggle");
+    });
+  };
 };

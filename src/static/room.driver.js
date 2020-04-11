@@ -15,6 +15,7 @@ $(() => {
   if (_user.type === "Creator") {
     Startup.Binders.placeProblemCreateForm();
     Startup.Binders.placeRoomDismissButton();
+    Startup.Binders.onProblemUpdate();
     return;
   }
 });
@@ -103,5 +104,6 @@ socket.on(PinnedProblems, (arr) => {
 });
 
 socket.on(UpdateProblem, (msg) => {
+  alert(`Problem ${msg.id} Updated`);
   DOM.Problem.update(msg);
 });

@@ -94,7 +94,10 @@ class Chat {
   }
 
   onUpdateProblem(msg) {
-    Problems.update(msg);
+    var problem = Problems.get(msg.id);
+    problem.question = msg.question;
+    problem.sampleTestCases = msg.sampleTestCases;
+    Problems.update(problem);
     io.of(Room).emit(UpdateProblem, msg);
   }
 
