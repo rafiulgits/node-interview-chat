@@ -110,6 +110,8 @@ class Chat {
         this.onRoomDismiss();
         return;
       }
+      this.user.active = false;
+      Users.update(this.user);
       io.of(Room).emit(NewMessage, notification);
       io.of(Room).emit(ActiveUsers, Users.getActiveList());
       console.log("disconnected client : " + this.user.id);
