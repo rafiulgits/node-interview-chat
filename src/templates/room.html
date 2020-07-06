@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>Chat Room</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.3.1/css/bootstrap.min.css"
+    />
+    <link
+      rel="stylesheet"
+      href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.11.0/styles/default.min.css"
+    />
+    <link rel="stylesheet" href="/static/room.css" />
+  </head>
+  <body>
+    <div class="block left-block">
+      <h4 class="text-center">Active Users</h4>
+      <div class="d-flex justify-content-center" id="room-actions">
+        <button class="btn btn-sm btn-danger m-2" id="leave-chat">
+          Leave Chat
+        </button>
+      </div>
+      <ul id="active-user-list"></ul>
+    </div>
+
+    <div class="block middle-block">
+      <h4 style="text-align: center;">Conversations</h4>
+
+      <ul id="message-list" style="padding: 5px;"></ul>
+
+      <div id="form-container">
+        <form action="" id="conversation-form">
+          <input type="text" id="input-message" placeholder="Your message" />
+          <button>Send</button>
+        </form>
+      </div>
+    </div>
+
+    <div class="block right-block">
+      <h4 style="text-align: center;">Problems</h4>
+
+      <div id="problem-list"></div>
+    </div>
+
+    <!-- Problem update modal -->
+    <div
+      class="modal fade bd-example-modal-lg"
+      tabindex="-1"
+      role="dialog"
+      aria-labelledby="Problem Update"
+      aria-hidden="true"
+      id="problem-update-modal"
+    >
+      <div class="modal-dialog modal-md">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h6>Update Problem #</h6>
+            <h6 class="text-center" id="problem-update-modal-id"></h6>
+          </div>
+          <div class="modal-body">
+            <form action="" id="problem-update-modal-form">
+              <input
+                type="text"
+                class="form-control m-2"
+                style="font-size: 13px;"
+                id="problem-update-modal-question"
+              />
+              <textarea
+                id="problem-update-modal-test-cases"
+                class="form-control m-2"
+              ></textarea>
+              <button type="submit" class="btn btn-success m-2">Update</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/google/code-prettify@master/loader/run_prettify.js"></script>
+    <script src="https:////cdnjs.cloudflare.com/ajax/libs/highlight.js/9.11.0/highlight.min.js"></script>
+    <script src="/static/highlight-line.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.19.2/axios.min.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/static/drawdown.js"></script>
+
+    <!-- static functions -->
+    <script>
+      const scrollToTop = (element) => {
+        $(element).animate({ scrollTop: $(element)[0].scrollHeight }, 1000);
+      };
+
+      const generateRandomString = () => {
+        let characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+        let charactersLength = characters.length;
+        var result = "";
+        for (var i = 0; i < 10; i++) {
+          result += characters.charAt(
+            Math.floor(Math.random() * charactersLength)
+          );
+        }
+        return result;
+      };
+
+      const highlightCode = () => {
+        var pres = document.querySelectorAll("pre>code");
+        for (var i = 0; i < pres.length; i++) {
+          hljs.highlightBlock(pres[i]);
+          hljs.lineNumbersBlock(pres[i]);
+        }
+      };
+
+      const runCodeScript = (lang, code, problemId) => {
+        var url = "http://localhost:3000/runtime";
+        if (lang.toLowerCase() === "javascript") {
+          url = url + "/js/";
+        } else if (lang.toLowerCase() === "python") {
+          url = url + "/py/";
+        } else {
+          return;
+        }
+        let body = JSON.stringify({ code: code, problemId: problemId });
+        let config = {
+          headers: { "Content-Type": "application/json" },
+        };
+        axios
+          .post(url, body, config)
+          .then((res) => {
+            if (res.data.result.status === undefined) {
+              alert(res.data.result);
+              return;
+            }
+            let data = res.data.result;
+            alert(
+              "Actual: " +
+                data.actual +
+                "\nFound: " +
+                data.found +
+                "\nStatus: " +
+                data.status
+            );
+          })
+          .catch((err) => {
+            alert("Runtime Error");
+          });
+      };
+
+      const onCodeLineSelect = (event) => {
+        try {
+          let code = event.target.getAttribute("codeline");
+          if (code !== "") {
+            let previousText = $("#input-message").val();
+            $("#input-message").val(previousText + " `" + code + "`");
+          }
+        } catch (err) {
+          alert("unable to copy code line");
+        }
+      };
+    </script>
+
+    <!-- Driver -->
+    <script src="/static/room.driver.js"></script>
+
+    <!-- Startup loader and binder binders -->
+    <script src="/static/room.startup.js"></script>
+
+    <!-- Handler -->
+    <script src="/static/room.handler.js"></script>
+
+    <!-- Component Builders Builders -->
+    <script src="/static/room.builder.js"></script>
+
+    <!-- HTML DOM  -->
+    <!-- 
+    
+    ID pattern:
+    
+    problem-list
+    problem-id-${id}
+    solutions-${problem_id}
+    solution-${solution_id}-${problem_id}
+     -->
+    <script src="/static/room.dom.js"></script>
+  </body>
+</html>
