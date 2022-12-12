@@ -17,7 +17,7 @@
     "babel-preset-es2015": "^6.24.1",
     "body-parser": "^1.19.0",
     "esm": "^3.2.25",
-    "express": "^4.17.1",
+    "express": "^4.17.3",
     "python-shell": "^1.0.8",
     "safe-eval": "^0.4.1",
     "socket.io": "^2.3.0"
